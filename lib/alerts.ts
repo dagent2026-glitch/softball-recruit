@@ -1,4 +1,5 @@
 import { sql } from './db';
+import { dispatcher } from './dispatcher';
 
 export async function checkAlertsForCamp(campId: number): Promise<number> {
   const camps = await sql`SELECT * FROM camps WHERE id = ${campId}`;
@@ -30,7 +31,14 @@ export async function checkAlertsForCamp(campId: number): Promise<number> {
       const existing = await sql`SELECT id FROM alerts WHERE athlete_id = ${athlete.id} AND camp_id = ${campId}`;
       if (existing.length === 0) {
         await sql`INSERT INTO alerts (athlete_id, camp_id, type) VALUES (${athlete.id}, ${campId}, ${alertType})`;
+        
         console.log(`[ALERT] ${alertType.toUpperCase()} → ${athlete.email} | ${camp.school_name} — ${camp.camp_name}`);
+        
+        // Dispatch notifications via our central routing hub (Email active, SMS/Push ready)
+        // Note: For Resend sandbox, athlete.email MUST match your verified Resend email address
+        // until we hook up a verified domain.
+        await dispatcher.send(athlete, camp, alertType as 'instant' | 'digest').catch(e => console.error("Dispatcher failed:", e));
+        
         alertCount++;
       }
     }
