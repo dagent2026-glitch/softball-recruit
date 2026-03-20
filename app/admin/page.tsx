@@ -58,7 +58,7 @@ export default function AdminPage() {
   if (!authed) return (
     <div className="min-h-screen bg-[#18181b] flex items-center justify-center">
       <form onSubmit={login} className="bg-white rounded-2xl p-8 w-80">
-        <h1 className="text-xl font-bold text-[#18181b] mb-4 text-center">🥎 Admin Panel</h1>
+        <h1 className="text-xl font-bold text-[#18181b] mb-4 text-center">Admin Panel</h1>
         <input type="password" placeholder="Password" value={pw} onChange={e => setPw(e.target.value)}
           className="w-full border rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
         <button type="submit" className="w-full bg-[#18181b] text-white font-bold py-2 rounded-lg">Enter</button>
@@ -70,9 +70,9 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-[#18181b]">🥎 RecruitRadar Admin</h1>
+          <h1 className="text-2xl font-bold text-[#18181b]">RecruitRadar Admin</h1>
           <div className="flex gap-3">
-            <button onClick={triggerAlerts} className="bg-[#d9f99d] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#bef264]">
+            <button onClick={triggerAlerts} className="bg-[#d9f99d] text-[#18181b] text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#bef264]">
               🔔 Trigger Alert Check
             </button>
           </div>

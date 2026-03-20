@@ -43,7 +43,7 @@ export default function LandingPage() {
       </section>
 
       {/* Stats bar */}
-      <div className="bg-[#d9f99d] text-white py-4 px-6">
+      <div className="bg-[#d9f99d] text-[#18181b] py-4 px-6">
         <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-8 text-center">
           {[['120+', 'Camps Listed'], ['50+', 'D1 Programs'], ['Power 4', '& Mid Major'], ['Instant', 'Alert System']].map(([val, label]) => (
             <div key={label}>
@@ -102,7 +102,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-8 px-6 text-center text-sm">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <span>🥎</span>
+          <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-[#fafafa]"><path d="M50 85 L25 60 L25 40 L75 40 L75 60 Z" fill="transparent" /><path d="M35 25 Q50 10 65 25" stroke="#d9f99d" /><path d="M25 15 Q50 -5 75 15" stroke="#d9f99d" opacity="0.5"/></svg>
           <span className="font-bold text-white">RecruitRadar</span>
         </div>
         <p>College Softball Camp Intelligence Platform</p>

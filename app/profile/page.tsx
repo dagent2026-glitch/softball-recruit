@@ -124,7 +124,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-[#18181b] text-white px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl">🥎</span>
+          <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M50 85 L25 60 L25 40 L75 40 L75 60 Z" fill="transparent" stroke="#18181b" /><path d="M35 25 Q50 10 65 25" stroke="#d9f99d" /><path d="M25 15 Q50 -5 75 15" stroke="#d9f99d" opacity="0.5"/></svg>
           <span className="font-bold">RecruitRadar</span>
         </Link>
         <div className="flex items-center gap-4">

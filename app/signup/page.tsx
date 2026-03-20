@@ -33,7 +33,7 @@ export default function SignupPage() {
     <div className="min-h-screen bg-[#18181b] flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-3xl">🥎</Link>
+          <Link href="/"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 mx-auto mb-4"><path d="M50 85 L25 60 L25 40 L75 40 L75 60 Z" fill="transparent" stroke="#18181b" /><path d="M35 25 Q50 10 65 25" stroke="#d9f99d" /><path d="M25 15 Q50 -5 75 15" stroke="#d9f99d" opacity="0.5"/></svg></Link>
           <h1 className="text-2xl font-bold text-[#18181b] mt-2">Create Your Profile</h1>
           <p className="text-gray-500 text-sm mt-1">Free to start — takes 2 minutes</p>
         </div>
