@@ -76,8 +76,8 @@ export default function ProfilePage() {
   const update = (key: string, val: unknown) => setProfile(p => ({ ...p, [key]: val }));
   const updateJSON = (key: string, val: string[]) => setProfile(p => ({ ...p, [key]: JSON.stringify(val) }));
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (e: React.FormEvent | null, redirect: boolean = true) => {
+    if (e) e.preventDefault();
     setSaving(true);
     const address = [profile.address_street, profile.address_city, profile.address_state, profile.address_zip].filter(Boolean).join(', ');
     const body = {
@@ -96,9 +96,12 @@ export default function ProfilePage() {
     setSaving(false);
     if (res.ok) {
       setSaved(true);
-      setTimeout(() => {
-        router.push('/camps?welcome=1');
-      }, 800);
+      setTimeout(() => setSaved(false), 3000);
+      if (redirect) {
+        setTimeout(() => {
+          router.push('/camps?settings_saved=1');
+        }, 800);
+      }
     }
   };
 
@@ -135,8 +138,8 @@ export default function ProfilePage() {
 
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#18181b]">Build Your Profile</h1>
-          <p className="text-gray-500 text-sm mt-1">Complete all 3 steps to get matched with the right camps</p>
+          <h1 className="text-2xl font-bold text-[#18181b]">Manage Profile & Selections</h1>
+          <p className="text-gray-500 text-sm mt-1">Update your info, positions, and target schools to refine your camp matches</p>
         </div>
 
         {/* Progress tabs */}
@@ -153,7 +156,12 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        <form onSubmit={handleSave}>
+        {saved && (
+          <div className="fixed top-4 right-4 bg-[#d9f99d] border border-[#bef264] text-[#18181b] font-bold px-4 py-2 rounded-lg shadow-lg z-50">
+            ✅ Settings Saved!
+          </div>
+        )}
+        <form onSubmit={(e) => handleSave(e, tab === 'targets')}>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 
             {/* BASIC INFO */}

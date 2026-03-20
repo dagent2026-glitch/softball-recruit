@@ -1,7 +1,10 @@
 'use client';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 export default function LandingPage() {
+  const [authed, setAuthed] = useState(false);
+  useEffect(() => { fetch('/api/auth/me').then(r => setAuthed(r.ok)); }, []);
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
@@ -11,10 +14,18 @@ export default function LandingPage() {
           <span className="text-xl font-bold tracking-tight">Recruit<span className="text-[#d9f99d]">Radar</span></span>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm text-white/80 hover:text-white transition">Log In</Link>
-          <Link href="/signup" className="bg-[#d9f99d] hover:bg-[#bef264] text-[#18181b] font-semibold text-sm px-4 py-2 rounded-lg transition">
-            Get Started Free
-          </Link>
+          {authed ? (
+            <Link href="/camps" className="bg-[#d9f99d] hover:bg-[#bef264] text-[#18181b] font-semibold text-sm px-4 py-2 rounded-lg transition">
+              Go to Dashboard →
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="text-sm text-white/80 hover:text-white transition">Log In</Link>
+              <Link href="/signup" className="bg-[#d9f99d] hover:bg-[#bef264] text-[#18181b] font-semibold text-sm px-4 py-2 rounded-lg transition">
+                Get Started Free
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 
@@ -32,9 +43,15 @@ export default function LandingPage() {
             Build your profile, pick your schools, and let us do the watching.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup" className="bg-[#d9f99d] hover:bg-[#bef264] text-[#18181b] font-bold text-lg px-8 py-4 rounded-xl transition shadow-lg">
-              Create Free Profile →
-            </Link>
+            {authed ? (
+              <Link href="/camps" className="bg-[#d9f99d] hover:bg-[#bef264] text-[#18181b] font-bold text-lg px-8 py-4 rounded-xl transition shadow-lg">
+                Enter Dashboard →
+              </Link>
+            ) : (
+              <Link href="/signup" className="bg-[#d9f99d] hover:bg-[#bef264] text-[#18181b] font-bold text-lg px-8 py-4 rounded-xl transition shadow-lg">
+                Create Free Profile →
+              </Link>
+            )}
             <Link href="/camps" className="bg-white/10 hover:bg-white/20 text-white font-semibold text-lg px-8 py-4 rounded-xl transition border border-white/20">
               Browse All Camps
             </Link>

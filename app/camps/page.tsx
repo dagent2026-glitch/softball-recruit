@@ -76,7 +76,7 @@ export default function CampsPage() {
         <div className="flex items-center gap-4">
           {authed ? (
             <>
-              <Link href="/profile" className="text-sm text-white/80 hover:text-white">My Profile</Link>
+              <Link href="/profile" className="text-sm font-semibold text-[#18181b] bg-[#d9f99d] hover:bg-[#bef264] px-4 py-2 rounded-lg transition">Settings & Selections</Link>
               <button onClick={logout} className="text-sm text-white/60 hover:text-white">Log out</button>
             </>
           ) : (
