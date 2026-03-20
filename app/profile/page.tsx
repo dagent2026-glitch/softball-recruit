@@ -11,7 +11,7 @@ const GRAD_YEARS = [2025,2026,2027,2028,2029,2030,2031,2032];
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
 
 type Profile = {
-  name: string; phone: string; address_street: string; address_city: string;
+  email: string; name: string; phone: string; address_street: string; address_city: string;
   address_state: string; address_zip: string; birthdate: string;
   graduation_year: number; high_school: string; travel_team: string;
   is_pitcher: number; is_catcher: number; primary_position: string;
@@ -53,7 +53,10 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [schoolSearch, setSchoolSearch] = useState('');
-  const [tab, setTab] = useState<'basic' | 'position' | 'targets'>('basic');
+  const [tab, setTab] = useState<'basic' | 'position' | 'targets' | 'account'>('basic');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [accountError, setAccountError] = useState('');
 
   const targetDivisions: string[] = JSON.parse(profile.target_divisions || '[]');
   const targetConferences: string[] = JSON.parse(profile.target_conferences || '[]');
@@ -75,6 +78,31 @@ export default function ProfilePage() {
 
   const update = (key: string, val: unknown) => setProfile(p => ({ ...p, [key]: val }));
   const updateJSON = (key: string, val: string[]) => setProfile(p => ({ ...p, [key]: JSON.stringify(val) }));
+
+  const handleAccountSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAccountError('');
+    if (newPassword && newPassword !== confirmPassword) {
+      setAccountError('Passwords do not match');
+      return;
+    }
+    setSaving(true);
+    const res = await fetch('/api/account', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: profile.email, password: newPassword || undefined }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const { error } = await res.json();
+      setAccountError(error || 'Failed to update account');
+    } else {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+  };
 
   const handleSave = async (e: React.FormEvent | null, redirect: boolean = true) => {
     if (e) e.preventDefault();
@@ -144,14 +172,14 @@ export default function ProfilePage() {
 
         {/* Progress tabs */}
         <div className="flex gap-1 bg-gray-200 p-1 rounded-xl mb-6">
-          {(['basic','position','targets'] as const).map((t, i) => (
+          {(['basic','position','targets','account'] as const).map((t, i) => (
             <button key={t} onClick={() => setTab(t)}
               className={`flex-1 py-2 text-sm font-semibold rounded-lg transition flex items-center justify-center gap-1.5 ${
                 tab === t ? 'bg-white text-[#18181b] shadow' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               {tabComplete[t] && <span className="text-green-500 text-xs">✓</span>}
-              {i === 0 ? '👤 Basic Info' : i === 1 ? '⚾ Position' : '🎯 Target Schools'}
+              {i === 0 ? '👤 Basic Info' : i === 1 ? '⚾ Position' : i === 2 ? '🎯 Target Schools' : '⚙️ Account'}
             </button>
           ))}
         </div>
@@ -161,7 +189,44 @@ export default function ProfilePage() {
             ✅ Settings Saved!
           </div>
         )}
-        <form onSubmit={(e) => handleSave(e, tab === 'targets')}>
+        {tab === 'account' ? (
+          <form onSubmit={handleAccountSave} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h2 className="text-xl font-bold text-[#18181b] mb-4">Account Settings</h2>
+            {accountError && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">{accountError}</div>}
+            
+            <div className="space-y-4 max-w-md">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input type="email" required value={profile.email || ''} onChange={e => update('email', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+              </div>
+              
+              <div className="pt-4 border-t border-gray-100 mt-6">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Change Password (Optional)</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} minLength={6}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                    <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} minLength={6}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <button type="submit" disabled={saving}
+                  className="w-full bg-[#18181b] text-white hover:bg-black font-bold py-3 rounded-lg transition shadow-md disabled:opacity-50 text-lg">
+                  {saving ? 'Saving...' : 'Update Account Settings'}
+                </button>
+              </div>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={(e) => handleSave(e, tab === 'targets')}>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 
             {/* BASIC INFO */}
