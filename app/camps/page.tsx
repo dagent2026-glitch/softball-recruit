@@ -68,7 +68,7 @@ export default function CampsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-[#0f2044] text-white px-6 py-4 flex items-center justify-between">
+      <nav className="bg-[#18181b] text-white px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-xl">🥎</span>
           <span className="font-bold">RecruitRadar</span>
@@ -82,7 +82,7 @@ export default function CampsPage() {
           ) : (
             <>
               <Link href="/login" className="text-sm text-white/80 hover:text-white">Log In</Link>
-              <Link href="/signup" className="bg-[#c9971c] text-white text-sm font-semibold px-4 py-2 rounded-lg">Sign Up Free</Link>
+              <Link href="/signup" className="bg-[#d9f99d] text-white text-sm font-semibold px-4 py-2 rounded-lg">Sign Up Free</Link>
             </>
           )}
         </div>
@@ -91,17 +91,17 @@ export default function CampsPage() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-[#0f2044]">Softball Camps 2026</h1>
+            <h1 className="text-2xl font-bold text-[#18181b]">Softball Camps 2026</h1>
             <p className="text-gray-500 text-sm mt-1">{camps.length} camps • Updated weekly</p>
           </div>
           {authed && (
             <div className="flex gap-2 bg-gray-200 p-1 rounded-xl">
               <button onClick={() => setViewMode('all')}
-                className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition ${viewMode === 'all' ? 'bg-white text-[#0f2044] shadow' : 'text-gray-500'}`}>
+                className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition ${viewMode === 'all' ? 'bg-white text-[#18181b] shadow' : 'text-gray-500'}`}>
                 All Camps
               </button>
               <button onClick={() => setViewMode('matched')}
-                className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition ${viewMode === 'matched' ? 'bg-white text-[#0f2044] shadow' : 'text-gray-500'}`}>
+                className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition ${viewMode === 'matched' ? 'bg-white text-[#18181b] shadow' : 'text-gray-500'}`}>
                 🎯 My Matches
               </button>
             </div>
@@ -120,7 +120,7 @@ export default function CampsPage() {
               <select key={key}
                 value={filters[key as keyof typeof filters]}
                 onChange={e => setFilters(f => ({ ...f, [key]: e.target.value }))}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c] bg-white">
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d] bg-white">
                 <option value="">All {label}s</option>
                 {options.map(o => <option key={o} value={o}>{o}</option>)}
               </select>
@@ -133,12 +133,12 @@ export default function CampsPage() {
         )}
 
         {!authed && (
-          <div className="bg-[#0f2044] text-white rounded-xl p-4 mb-6 flex items-center justify-between">
+          <div className="bg-[#18181b] text-white rounded-xl p-4 mb-6 flex items-center justify-between">
             <div>
               <p className="font-semibold">🔔 Want alerts when target schools post camps?</p>
               <p className="text-sm text-white/70">Create a free profile to get matched and notified instantly.</p>
             </div>
-            <Link href="/signup" className="bg-[#c9971c] text-white text-sm font-bold px-4 py-2 rounded-lg whitespace-nowrap ml-4">
+            <Link href="/signup" className="bg-[#d9f99d] text-white text-sm font-bold px-4 py-2 rounded-lg whitespace-nowrap ml-4">
               Sign Up Free →
             </Link>
           </div>
@@ -152,17 +152,17 @@ export default function CampsPage() {
             <p className="text-gray-500">No camps match your filters.</p>
             {viewMode === 'matched' && (
               <p className="text-sm text-gray-400 mt-2">
-                <Link href="/profile" className="text-[#c9971c] hover:underline">Update your profile</Link> to get better matches.
+                <Link href="/profile" className="text-[#d9f99d] hover:underline">Update your profile</Link> to get better matches.
               </p>
             )}
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {camps.map((camp) => (
-              <div key={camp.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition hover:border-[#c9971c]/40">
+              <div key={camp.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition hover:border-[#d9f99d]/40">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-bold text-[#0f2044] text-base leading-tight">{camp.school_name}</h3>
+                    <h3 className="font-bold text-[#18181b] text-base leading-tight">{camp.school_name}</h3>
                     <p className="text-sm text-gray-600 mt-0.5">{camp.camp_name}</p>
                   </div>
                 </div>
@@ -206,7 +206,7 @@ export default function CampsPage() {
                 </div>
                 {camp.registration_link && (
                   <a href={camp.registration_link} target="_blank" rel="noopener noreferrer"
-                    className="block w-full text-center bg-[#0f2044] hover:bg-[#1a3060] text-white text-sm font-semibold py-2 rounded-lg transition">
+                    className="block w-full text-center bg-[#18181b] hover:bg-[#1a3060] text-white text-sm font-semibold py-2 rounded-lg transition">
                     Register / Learn More →
                   </a>
                 )}

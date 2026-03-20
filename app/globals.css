@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --navy: #0f2044;
-  --gold: #c9971c;
-  --gold-light: #f0b429;
+  --navy: #18181b;
+  --gold: #d9f99d;
+  --gold-light: #bef264;
 }
 
 body {

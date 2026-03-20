@@ -32,7 +32,7 @@ function MultiCheck({ label, options, selected, onChange }: {
           <button key={opt} type="button"
             onClick={() => onChange(selected.includes(opt) ? selected.filter(s => s !== opt) : [...selected, opt])}
             className={`px-3 py-1.5 rounded-full text-sm font-medium border transition ${
-              selected.includes(opt) ? 'bg-[#0f2044] text-white border-[#0f2044]' : 'bg-white text-gray-600 border-gray-300 hover:border-[#0f2044]'
+              selected.includes(opt) ? 'bg-[#18181b] text-white border-[#18181b]' : 'bg-white text-gray-600 border-gray-300 hover:border-[#18181b]'
             }`}
           >{opt}</button>
         ))}
@@ -115,14 +115,14 @@ export default function ProfilePage() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-[#0f2044] flex items-center justify-center">
+    <div className="min-h-screen bg-[#18181b] flex items-center justify-center">
       <div className="text-white text-xl">Loading...</div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-[#0f2044] text-white px-6 py-4 flex items-center justify-between">
+      <nav className="bg-[#18181b] text-white px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-xl">🥎</span>
           <span className="font-bold">RecruitRadar</span>
@@ -135,7 +135,7 @@ export default function ProfilePage() {
 
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#0f2044]">Build Your Profile</h1>
+          <h1 className="text-2xl font-bold text-[#18181b]">Build Your Profile</h1>
           <p className="text-gray-500 text-sm mt-1">Complete all 3 steps to get matched with the right camps</p>
         </div>
 
@@ -144,7 +144,7 @@ export default function ProfilePage() {
           {(['basic','position','targets'] as const).map((t, i) => (
             <button key={t} onClick={() => setTab(t)}
               className={`flex-1 py-2 text-sm font-semibold rounded-lg transition flex items-center justify-center gap-1.5 ${
-                tab === t ? 'bg-white text-[#0f2044] shadow' : 'text-gray-500 hover:text-gray-700'
+                tab === t ? 'bg-white text-[#18181b] shadow' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               {tabComplete[t] && <span className="text-green-500 text-xs">✓</span>}
@@ -163,13 +163,13 @@ export default function ProfilePage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
                     <input required value={profile.name} onChange={e => update('name', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                     <input type="tel" value={profile.phone} onChange={e => update('phone', e.target.value)}
                       placeholder="(555) 555-5555"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
                   </div>
                 </div>
 
@@ -177,7 +177,7 @@ export default function ProfilePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
                   <input value={profile.address_street} onChange={e => update('address_street', e.target.value)}
                     placeholder="123 Main St"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
                 </div>
 
                 <div className="grid grid-cols-5 gap-3">
@@ -185,12 +185,12 @@ export default function ProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
                     <input value={profile.address_city} onChange={e => update('address_city', e.target.value)}
                       placeholder="Atlanta"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
                   </div>
                   <div className="col-span-1">
                     <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
                     <select value={profile.address_state} onChange={e => update('address_state', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]">
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]">
                       <option value="">--</option>
                       {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
@@ -199,7 +199,7 @@ export default function ProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">ZIP Code</label>
                     <input value={profile.address_zip} onChange={e => update('address_zip', e.target.value)}
                       placeholder="30301" maxLength={10}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
                   </div>
                 </div>
 
@@ -207,12 +207,12 @@ export default function ProfilePage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Birthdate</label>
                     <input type="date" value={profile.birthdate} onChange={e => update('birthdate', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Graduation Year *</label>
                     <select required value={profile.graduation_year} onChange={e => update('graduation_year', parseInt(e.target.value))}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]">
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]">
                       <option value={0}>Select year</option>
                       {GRAD_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
@@ -224,19 +224,19 @@ export default function ProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">High School</label>
                     <input value={profile.high_school} onChange={e => update('high_school', e.target.value)}
                       placeholder="Cherokee High School"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Travel Team</label>
                     <input value={profile.travel_team} onChange={e => update('travel_team', e.target.value)}
                       placeholder="Lady Warriors Gold"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
                   </div>
                 </div>
 
                 <div className="mt-4">
                   <button type="button" onClick={() => setTab('position')}
-                    className="w-full bg-[#0f2044] text-white font-bold py-3 rounded-lg hover:bg-[#1a3060] transition">
+                    className="w-full bg-[#18181b] text-white font-bold py-3 rounded-lg hover:bg-[#1a3060] transition">
                     Next: Position Info →
                   </button>
                 </div>
@@ -252,7 +252,7 @@ export default function ProfilePage() {
                       <input type="checkbox"
                         checked={profile[key as keyof Profile] === 1}
                         onChange={e => update(key, e.target.checked ? 1 : 0)}
-                        className="w-4 h-4 accent-[#0f2044]" />
+                        className="w-4 h-4 accent-[#18181b]" />
                       <span className="text-sm font-medium">{label}</span>
                     </label>
                   ))}
@@ -264,7 +264,7 @@ export default function ProfilePage() {
                     {POSITIONS.map(pos => (
                       <button key={pos} type="button" onClick={() => update('primary_position', pos)}
                         className={`px-3 py-1.5 rounded-full text-sm font-medium border transition ${
-                          profile.primary_position === pos ? 'bg-[#0f2044] text-white border-[#0f2044]' : 'bg-white text-gray-600 border-gray-300 hover:border-[#0f2044]'
+                          profile.primary_position === pos ? 'bg-[#18181b] text-white border-[#18181b]' : 'bg-white text-gray-600 border-gray-300 hover:border-[#18181b]'
                         }`}>{pos}</button>
                     ))}
                   </div>
@@ -276,7 +276,7 @@ export default function ProfilePage() {
                     {['Left','Right','Switch'].map(b => (
                       <button key={b} type="button" onClick={() => update('bats', b)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium border transition ${
-                          profile.bats === b ? 'bg-[#0f2044] text-white border-[#0f2044]' : 'bg-white text-gray-600 border-gray-300'
+                          profile.bats === b ? 'bg-[#18181b] text-white border-[#18181b]' : 'bg-white text-gray-600 border-gray-300'
                         }`}>{b}</button>
                     ))}
                   </div>
@@ -288,7 +288,7 @@ export default function ProfilePage() {
                     ← Back
                   </button>
                   <button type="button" onClick={() => setTab('targets')}
-                    className="flex-1 bg-[#0f2044] text-white font-bold py-3 rounded-lg hover:bg-[#1a3060] transition">
+                    className="flex-1 bg-[#18181b] text-white font-bold py-3 rounded-lg hover:bg-[#1a3060] transition">
                     Next: Target Schools →
                   </button>
                 </div>
@@ -308,16 +308,16 @@ export default function ProfilePage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     Target Schools
-                    <span className="ml-2 text-[#c9971c] font-normal text-xs">({targetSchools.length} selected — instant alerts when these post camps)</span>
+                    <span className="ml-2 text-[#d9f99d] font-normal text-xs">({targetSchools.length} selected — instant alerts when these post camps)</span>
                   </label>
                   <input type="text" placeholder="Search schools..."
                     value={schoolSearch} onChange={e => setSchoolSearch(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
 
                   {targetSchools.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                       {targetSchools.map(s => (
-                        <span key={s} className="bg-[#0f2044] text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                        <span key={s} className="bg-[#18181b] text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
                           {s}
                           <button type="button" onClick={() => updateJSON('target_schools', targetSchools.filter(x => x !== s))}
                             className="text-white/70 hover:text-white">×</button>
@@ -335,7 +335,7 @@ export default function ProfilePage() {
                           onChange={e => updateJSON('target_schools',
                             e.target.checked ? [...targetSchools, school] : targetSchools.filter(s => s !== school)
                           )}
-                          className="w-4 h-4 accent-[#0f2044]" />
+                          className="w-4 h-4 accent-[#18181b]" />
                         <span className="text-sm text-gray-700">{school}</span>
                       </label>
                     ))}
@@ -348,7 +348,7 @@ export default function ProfilePage() {
                     ← Back
                   </button>
                   <button type="submit" disabled={saving}
-                    className="flex-1 bg-[#c9971c] hover:bg-[#f0b429] text-white font-bold py-3 rounded-lg transition disabled:opacity-50 text-lg">
+                    className="flex-1 bg-[#d9f99d] hover:bg-[#bef264] text-[#18181b] font-bold py-3 rounded-lg transition disabled:opacity-50 text-lg">
                     {saving ? 'Saving...' : saved ? '✓ Saved! Redirecting...' : '🎯 Save & See My Camps →'}
                   </button>
                 </div>

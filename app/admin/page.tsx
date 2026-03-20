@@ -56,12 +56,12 @@ export default function AdminPage() {
   };
 
   if (!authed) return (
-    <div className="min-h-screen bg-[#0f2044] flex items-center justify-center">
+    <div className="min-h-screen bg-[#18181b] flex items-center justify-center">
       <form onSubmit={login} className="bg-white rounded-2xl p-8 w-80">
-        <h1 className="text-xl font-bold text-[#0f2044] mb-4 text-center">🥎 Admin Panel</h1>
+        <h1 className="text-xl font-bold text-[#18181b] mb-4 text-center">🥎 Admin Panel</h1>
         <input type="password" placeholder="Password" value={pw} onChange={e => setPw(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
-        <button type="submit" className="w-full bg-[#0f2044] text-white font-bold py-2 rounded-lg">Enter</button>
+          className="w-full border rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+        <button type="submit" className="w-full bg-[#18181b] text-white font-bold py-2 rounded-lg">Enter</button>
       </form>
     </div>
   );
@@ -70,9 +70,9 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-[#0f2044]">🥎 RecruitRadar Admin</h1>
+          <h1 className="text-2xl font-bold text-[#18181b]">🥎 RecruitRadar Admin</h1>
           <div className="flex gap-3">
-            <button onClick={triggerAlerts} className="bg-[#c9971c] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#f0b429]">
+            <button onClick={triggerAlerts} className="bg-[#d9f99d] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#bef264]">
               🔔 Trigger Alert Check
             </button>
           </div>
@@ -83,63 +83,63 @@ export default function AdminPage() {
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Add camp */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="font-bold text-[#0f2044] mb-4">Add New Camp</h2>
+            <h2 className="font-bold text-[#18181b] mb-4">Add New Camp</h2>
             <form onSubmit={addCamp} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <input required placeholder="School Name" value={form.school_name} onChange={e => setForm(f => ({...f, school_name: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]" />
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
                 <input required placeholder="Camp Name" value={form.camp_name} onChange={e => setForm(f => ({...f, camp_name: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]" />
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <select value={form.division} onChange={e => setForm(f => ({...f, division: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]">
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]">
                   {['Power 4','Mid Major','Multi'].map(d => <option key={d}>{d}</option>)}
                 </select>
                 <select value={form.conference} onChange={e => setForm(f => ({...f, conference: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]">
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]">
                   {['SEC','ACC','Big Ten','Big 12','Sun Belt','American','Mountain West','Big West','MAC','Other','Multi'].map(c => <option key={c}>{c}</option>)}
                 </select>
                 <select value={form.region} onChange={e => setForm(f => ({...f, region: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]">
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]">
                   {['Southeast','Northeast','Midwest','West','Texas'].map(r => <option key={r}>{r}</option>)}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <input placeholder="State (e.g. FL)" value={form.state} onChange={e => setForm(f => ({...f, state: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]" />
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
                 <input placeholder="City" value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]" />
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <input type="date" value={form.start_date} onChange={e => setForm(f => ({...f, start_date: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]" />
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
                 <input type="date" value={form.end_date} onChange={e => setForm(f => ({...f, end_date: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]" />
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
                 <select value={form.month} onChange={e => setForm(f => ({...f, month: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]">
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]">
                   {MONTHS.map(m => <option key={m}>{m}</option>)}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <select value={form.camp_type} onChange={e => setForm(f => ({...f, camp_type: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]">
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]">
                   {['Prospect','Elite','Youth','Pitching','Team Camp','Showcase'].map(t => <option key={t}>{t}</option>)}
                 </select>
                 <input placeholder="Cost (e.g. $250)" value={form.cost} onChange={e => setForm(f => ({...f, cost: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]" />
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <input placeholder="Grad Years (e.g. 2027-2031)" value={form.grad_years} onChange={e => setForm(f => ({...f, grad_years: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]" />
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
                 <select value={form.source} onChange={e => setForm(f => ({...f, source: e.target.value}))}
-                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]">
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]">
                   {['Ryzer','ACTIVE','Exact'].map(s => <option key={s}>{s}</option>)}
                 </select>
               </div>
               <input placeholder="Registration Link" value={form.registration_link} onChange={e => setForm(f => ({...f, registration_link: e.target.value}))}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c9971c]" />
-              <button type="submit" className="w-full bg-[#0f2044] text-white font-bold py-2.5 rounded-lg hover:bg-[#1a3060] transition">
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
+              <button type="submit" className="w-full bg-[#18181b] text-white font-bold py-2.5 rounded-lg hover:bg-[#1a3060] transition">
                 Add Camp + Trigger Alerts
               </button>
             </form>
@@ -148,7 +148,7 @@ export default function AdminPage() {
           {/* Camp list + alerts */}
           <div className="space-y-4">
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="font-bold text-[#0f2044] mb-3">Camps ({camps.length})</h2>
+              <h2 className="font-bold text-[#18181b] mb-3">Camps ({camps.length})</h2>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {camps.map(c => (
                   <div key={c.id} className="flex items-center justify-between text-sm py-1.5 border-b border-gray-100 last:border-0">
@@ -163,7 +163,7 @@ export default function AdminPage() {
             </div>
 
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="font-bold text-[#0f2044] mb-3">Alert Log ({alertLog.length})</h2>
+              <h2 className="font-bold text-[#18181b] mb-3">Alert Log ({alertLog.length})</h2>
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {alertLog.length === 0 ? (
                   <p className="text-gray-400 text-sm">No alerts yet</p>
