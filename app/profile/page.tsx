@@ -178,7 +178,7 @@ export default function ProfilePage() {
                 tab === t ? 'bg-white text-[#18181b] shadow' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              {tabComplete[t] && <span className="text-green-500 text-xs">✓</span>}
+              {tabComplete[t as keyof typeof tabComplete] && <span className="text-green-500 text-xs">✓</span>}
               {i === 0 ? '👤 Basic Info' : i === 1 ? '⚾ Position' : i === 2 ? '🎯 Target Schools' : '⚙️ Account'}
             </button>
           ))}
