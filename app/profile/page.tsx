@@ -2,16 +2,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { D1_SCHOOLS } from '@/lib/schools';
+import { D1_SCHOOLS, CONFERENCES } from '@/lib/schools';
 
 const POSITIONS = ['Pitcher','Catcher','1B','2B','3B','SS','Middle Infield','Corner Infield','OF','Utility'];
 const DIVISIONS = ['Power 4','Mid Major','D2','D3','NAIA'];
-const CONFERENCES = ['SEC','ACC','Big Ten','Big 12','Sun Belt','American','Mountain West','Big West','MAC','Missouri Valley','Other'];
 const REGIONS = ['Southeast','Northeast','Midwest','West','Texas'];
 const GRAD_YEARS = [2025,2026,2027,2028,2029,2030,2031,2032];
+const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
 
 type Profile = {
-  name: string; phone: string; address: string; birthdate: string;
+  name: string; phone: string; address_street: string; address_city: string;
+  address_state: string; address_zip: string; birthdate: string;
   graduation_year: number; high_school: string; travel_team: string;
   is_pitcher: number; is_catcher: number; primary_position: string;
   is_hitter: number; bats: string;
@@ -29,13 +30,9 @@ function MultiCheck({ label, options, selected, onChange }: {
       <div className="flex flex-wrap gap-2">
         {options.map(opt => (
           <button key={opt} type="button"
-            onClick={() => onChange(
-              selected.includes(opt) ? selected.filter(s => s !== opt) : [...selected, opt]
-            )}
+            onClick={() => onChange(selected.includes(opt) ? selected.filter(s => s !== opt) : [...selected, opt])}
             className={`px-3 py-1.5 rounded-full text-sm font-medium border transition ${
-              selected.includes(opt)
-                ? 'bg-[#0f2044] text-white border-[#0f2044]'
-                : 'bg-white text-gray-600 border-gray-300 hover:border-[#0f2044]'
+              selected.includes(opt) ? 'bg-[#0f2044] text-white border-[#0f2044]' : 'bg-white text-gray-600 border-gray-300 hover:border-[#0f2044]'
             }`}
           >{opt}</button>
         ))}
@@ -47,11 +44,10 @@ function MultiCheck({ label, options, selected, onChange }: {
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile>({
-    name: '', phone: '', address: '', birthdate: '', graduation_year: 0,
-    high_school: '', travel_team: '', is_pitcher: 0, is_catcher: 0,
-    primary_position: '', is_hitter: 0, bats: 'Right',
-    target_divisions: '[]', target_conferences: '[]',
-    target_regions: '[]', target_schools: '[]',
+    name: '', phone: '', address_street: '', address_city: '', address_state: '',
+    address_zip: '', birthdate: '', graduation_year: 0, high_school: '', travel_team: '',
+    is_pitcher: 0, is_catcher: 0, primary_position: '', is_hitter: 0, bats: 'Right',
+    target_divisions: '[]', target_conferences: '[]', target_regions: '[]', target_schools: '[]',
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -66,10 +62,13 @@ export default function ProfilePage() {
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => {
-      if (!r.ok) { router.push('/login'); return; }
+      if (!r.ok) { router.push('/login'); return null; }
       return r.json();
     }).then(data => {
-      if (data) setProfile(data);
+      if (data) {
+        // Parse address back into fields if stored as combined
+        setProfile(p => ({ ...p, ...data }));
+      }
       setLoading(false);
     });
   }, [router]);
@@ -80,8 +79,10 @@ export default function ProfilePage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    const address = [profile.address_street, profile.address_city, profile.address_state, profile.address_zip].filter(Boolean).join(', ');
     const body = {
       ...profile,
+      address,
       target_divisions: targetDivisions,
       target_conferences: targetConferences,
       target_regions: targetRegions,
@@ -93,7 +94,12 @@ export default function ProfilePage() {
       body: JSON.stringify(body),
     });
     setSaving(false);
-    if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 2000); }
+    if (res.ok) {
+      setSaved(true);
+      setTimeout(() => {
+        router.push('/camps?welcome=1');
+      }, 800);
+    }
   };
 
   const logout = async () => {
@@ -101,9 +107,12 @@ export default function ProfilePage() {
     router.push('/');
   };
 
-  const filteredSchools = D1_SCHOOLS.filter(s =>
-    s.toLowerCase().includes(schoolSearch.toLowerCase())
-  );
+  const filteredSchools = D1_SCHOOLS.filter(s => s.toLowerCase().includes(schoolSearch.toLowerCase()));
+  const tabComplete = {
+    basic: !!(profile.name && profile.graduation_year),
+    position: !!(profile.primary_position),
+    targets: targetSchools.length > 0 || targetDivisions.length > 0,
+  };
 
   if (loading) return (
     <div className="min-h-screen bg-[#0f2044] flex items-center justify-center">
@@ -113,7 +122,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Nav */}
       <nav className="bg-[#0f2044] text-white px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-xl">🥎</span>
@@ -127,19 +135,20 @@ export default function ProfilePage() {
 
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#0f2044]">My Profile</h1>
-          <p className="text-gray-500 text-sm mt-1">Complete your profile to get matched with the right camps</p>
+          <h1 className="text-2xl font-bold text-[#0f2044]">Build Your Profile</h1>
+          <p className="text-gray-500 text-sm mt-1">Complete all 3 steps to get matched with the right camps</p>
         </div>
 
-        {/* Tabs */}
+        {/* Progress tabs */}
         <div className="flex gap-1 bg-gray-200 p-1 rounded-xl mb-6">
-          {(['basic','position','targets'] as const).map(t => (
+          {(['basic','position','targets'] as const).map((t, i) => (
             <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg capitalize transition ${
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition flex items-center justify-center gap-1.5 ${
                 tab === t ? 'bg-white text-[#0f2044] shadow' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              {t === 'targets' ? '🎯 Target Schools' : t === 'position' ? '⚾ Position' : '👤 Basic Info'}
+              {tabComplete[t] && <span className="text-green-500 text-xs">✓</span>}
+              {i === 0 ? '👤 Basic Info' : i === 1 ? '⚾ Position' : '🎯 Target Schools'}
             </button>
           ))}
         </div>
@@ -147,6 +156,7 @@ export default function ProfilePage() {
         <form onSubmit={handleSave}>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 
+            {/* BASIC INFO */}
             {tab === 'basic' && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -157,15 +167,42 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                    <input value={profile.phone} onChange={e => update('phone', e.target.value)}
+                    <input type="tel" value={profile.phone} onChange={e => update('phone', e.target.value)}
+                      placeholder="(555) 555-5555"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
                   </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                  <input value={profile.address} onChange={e => update('address', e.target.value)}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
+                  <input value={profile.address_street} onChange={e => update('address_street', e.target.value)}
+                    placeholder="123 Main St"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
                 </div>
+
+                <div className="grid grid-cols-5 gap-3">
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                    <input value={profile.address_city} onChange={e => update('address_city', e.target.value)}
+                      placeholder="Atlanta"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
+                  </div>
+                  <div className="col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                    <select value={profile.address_state} onChange={e => update('address_state', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]">
+                      <option value="">--</option>
+                      {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">ZIP Code</label>
+                    <input value={profile.address_zip} onChange={e => update('address_zip', e.target.value)}
+                      placeholder="30301" maxLength={10}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Birthdate</label>
@@ -173,32 +210,43 @@ export default function ProfilePage() {
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Graduation Year</label>
-                    <select value={profile.graduation_year} onChange={e => update('graduation_year', parseInt(e.target.value))}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Graduation Year *</label>
+                    <select required value={profile.graduation_year} onChange={e => update('graduation_year', parseInt(e.target.value))}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]">
                       <option value={0}>Select year</option>
                       {GRAD_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
                   </div>
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">High School</label>
                     <input value={profile.high_school} onChange={e => update('high_school', e.target.value)}
+                      placeholder="Cherokee High School"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Travel Team</label>
                     <input value={profile.travel_team} onChange={e => update('travel_team', e.target.value)}
+                      placeholder="Lady Warriors Gold"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
                   </div>
+                </div>
+
+                <div className="mt-4">
+                  <button type="button" onClick={() => setTab('position')}
+                    className="w-full bg-[#0f2044] text-white font-bold py-3 rounded-lg hover:bg-[#1a3060] transition">
+                    Next: Position Info →
+                  </button>
                 </div>
               </div>
             )}
 
+            {/* POSITION */}
             {tab === 'position' && (
               <div>
-                <div className="flex gap-6 mb-6">
+                <div className="flex flex-wrap gap-6 mb-6">
                   {[['is_pitcher','Pitcher 🥎'],['is_catcher','Catcher 🧤'],['is_hitter','Hitter 🏏']].map(([key, label]) => (
                     <label key={key} className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox"
@@ -211,36 +259,43 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Primary Position</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Primary Position *</label>
                   <div className="flex flex-wrap gap-2">
                     {POSITIONS.map(pos => (
-                      <button key={pos} type="button"
-                        onClick={() => update('primary_position', pos)}
+                      <button key={pos} type="button" onClick={() => update('primary_position', pos)}
                         className={`px-3 py-1.5 rounded-full text-sm font-medium border transition ${
-                          profile.primary_position === pos
-                            ? 'bg-[#0f2044] text-white border-[#0f2044]'
-                            : 'bg-white text-gray-600 border-gray-300 hover:border-[#0f2044]'
-                        }`}
-                      >{pos}</button>
+                          profile.primary_position === pos ? 'bg-[#0f2044] text-white border-[#0f2044]' : 'bg-white text-gray-600 border-gray-300 hover:border-[#0f2044]'
+                        }`}>{pos}</button>
                     ))}
                   </div>
                 </div>
 
-                <div>
+                <div className="mb-6">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Bats</label>
                   <div className="flex gap-3">
                     {['Left','Right','Switch'].map(b => (
                       <button key={b} type="button" onClick={() => update('bats', b)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium border transition ${
                           profile.bats === b ? 'bg-[#0f2044] text-white border-[#0f2044]' : 'bg-white text-gray-600 border-gray-300'
-                        }`}
-                      >{b}</button>
+                        }`}>{b}</button>
                     ))}
                   </div>
+                </div>
+
+                <div className="flex gap-3 mt-4">
+                  <button type="button" onClick={() => setTab('basic')}
+                    className="flex-1 border border-gray-300 text-gray-600 font-semibold py-3 rounded-lg hover:border-gray-400 transition">
+                    ← Back
+                  </button>
+                  <button type="button" onClick={() => setTab('targets')}
+                    className="flex-1 bg-[#0f2044] text-white font-bold py-3 rounded-lg hover:bg-[#1a3060] transition">
+                    Next: Target Schools →
+                  </button>
                 </div>
               </div>
             )}
 
+            {/* TARGET SCHOOLS */}
             {tab === 'targets' && (
               <div>
                 <MultiCheck label="Target Division" options={DIVISIONS} selected={targetDivisions}
@@ -251,29 +306,28 @@ export default function ProfilePage() {
                   onChange={v => updateJSON('target_regions', v)} />
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
                     Target Schools
-                    <span className="ml-2 text-[#c9971c] font-normal">({targetSchools.length} selected)</span>
+                    <span className="ml-2 text-[#c9971c] font-normal text-xs">({targetSchools.length} selected — instant alerts when these post camps)</span>
                   </label>
-                  <p className="text-xs text-gray-500 mb-3">🔔 You get instant alerts when any selected school posts a new camp</p>
-                  <input
-                    type="text" placeholder="Search schools..."
+                  <input type="text" placeholder="Search schools..."
                     value={schoolSearch} onChange={e => setSchoolSearch(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[#c9971c]"
-                  />
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#c9971c]" />
+
                   {targetSchools.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-3">
+                    <div className="flex flex-wrap gap-1.5 mb-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                       {targetSchools.map(s => (
                         <span key={s} className="bg-[#0f2044] text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
                           {s}
                           <button type="button" onClick={() => updateJSON('target_schools', targetSchools.filter(x => x !== s))}
-                            className="text-white/70 hover:text-white ml-0.5">×</button>
+                            className="text-white/70 hover:text-white">×</button>
                         </span>
                       ))}
                     </div>
                   )}
-                  <div className="border border-gray-200 rounded-lg max-h-48 overflow-y-auto">
-                    {filteredSchools.slice(0, 100).map(school => (
+
+                  <div className="border border-gray-200 rounded-lg max-h-52 overflow-y-auto">
+                    {filteredSchools.slice(0, 150).map(school => (
                       <label key={school}
                         className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
                         <input type="checkbox"
@@ -281,30 +335,25 @@ export default function ProfilePage() {
                           onChange={e => updateJSON('target_schools',
                             e.target.checked ? [...targetSchools, school] : targetSchools.filter(s => s !== school)
                           )}
-                          className="w-4 h-4 accent-[#0f2044]"
-                        />
+                          className="w-4 h-4 accent-[#0f2044]" />
                         <span className="text-sm text-gray-700">{school}</span>
                       </label>
                     ))}
                   </div>
                 </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button type="button" onClick={() => setTab('position')}
+                    className="flex-1 border border-gray-300 text-gray-600 font-semibold py-3 rounded-lg hover:border-gray-400 transition">
+                    ← Back
+                  </button>
+                  <button type="submit" disabled={saving}
+                    className="flex-1 bg-[#c9971c] hover:bg-[#f0b429] text-white font-bold py-3 rounded-lg transition disabled:opacity-50 text-lg">
+                    {saving ? 'Saving...' : saved ? '✓ Saved! Redirecting...' : '🎯 Save & See My Camps →'}
+                  </button>
+                </div>
               </div>
             )}
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex gap-3">
-              {(['basic','position','targets'] as const).map((t, i) => (
-                <button key={t} type="button" onClick={() => setTab(t)}
-                  className="text-sm text-gray-500 hover:text-[#0f2044] underline"
-                >{i === 0 ? '← Back' : i === 1 ? (tab === 'basic' ? 'Next: Position →' : tab === 'targets' ? '← Position' : '') : 'Next: Targets →'}
-                </button>
-              ))}
-            </div>
-            <button type="submit" disabled={saving}
-              className="bg-[#c9971c] hover:bg-[#f0b429] text-white font-bold px-6 py-2.5 rounded-lg transition disabled:opacity-50">
-              {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Profile'}
-            </button>
           </div>
         </form>
       </div>

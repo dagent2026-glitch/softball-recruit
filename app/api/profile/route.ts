@@ -9,7 +9,13 @@ export async function PUT(req: NextRequest) {
     await initDb();
     const b = await req.json();
     await sql`UPDATE athletes SET
-      name=${b.name}, phone=${b.phone||null}, address=${b.address||null}, birthdate=${b.birthdate||null},
+      name=${b.name}, phone=${b.phone||null},
+      address=${b.address||null},
+      address_street=${b.address_street||null},
+      address_city=${b.address_city||null},
+      address_state=${b.address_state||null},
+      address_zip=${b.address_zip||null},
+      birthdate=${b.birthdate||null},
       graduation_year=${b.graduation_year||null}, high_school=${b.high_school||null}, travel_team=${b.travel_team||null},
       is_pitcher=${b.is_pitcher?1:0}, is_catcher=${b.is_catcher?1:0}, primary_position=${b.primary_position||null},
       is_hitter=${b.is_hitter?1:0}, bats=${b.bats||'Right'},
