@@ -44,7 +44,7 @@ function MultiCheck({ label, options, selected, onChange }: {
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile>({
-    name: '', phone: '', address_street: '', address_city: '', address_state: '',
+    email: '', name: '', phone: '', address_street: '', address_city: '', address_state: '',
     address_zip: '', birthdate: '', graduation_year: 0, high_school: '', travel_team: '',
     is_pitcher: 0, is_catcher: 0, primary_position: '', is_hitter: 0, bats: 'Right',
     target_divisions: '[]', target_conferences: '[]', target_regions: '[]', target_schools: '[]',
