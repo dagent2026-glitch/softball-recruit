@@ -21,7 +21,7 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error); return; }
-      router.push('/camps');
+      window.location.href = '/camps';
     } catch {
       setError('Something went wrong');
     } finally {

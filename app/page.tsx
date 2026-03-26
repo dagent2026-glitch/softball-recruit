@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 export default function LandingPage() {
   const [authed, setAuthed] = useState(false);
-  useEffect(() => { fetch('/api/auth/me').then(r => setAuthed(r.ok)); }, []);
+  useEffect(() => { fetch('/api/auth/me', { cache: 'no-store' }).then(r => setAuthed(r.ok)); }, []);
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}

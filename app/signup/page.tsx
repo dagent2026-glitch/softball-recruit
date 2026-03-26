@@ -21,7 +21,7 @@ export default function SignupPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error); return; }
-      router.push('/profile?onboarding=1');
+      window.location.href = '/profile?onboarding=1';
     } catch {
       setError('Something went wrong');
     } finally {

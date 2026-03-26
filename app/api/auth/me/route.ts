@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getSessionAthleteId } from '@/lib/auth';
 import { sql, initDb } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const athleteId = await getSessionAthleteId();
   if (!athleteId) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });

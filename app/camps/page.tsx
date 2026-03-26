@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Nav from '@/components/Nav';
 
 type Camp = {
   id: number; school_name: string; camp_name: string; division: string;
@@ -26,7 +26,6 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export default function CampsPage() {
-  const router = useRouter();
   const [camps, setCamps] = useState<Camp[]>([]);
   const [loading, setLoading] = useState(true);
   const [authed, setAuthed] = useState(false);
@@ -34,9 +33,7 @@ export default function CampsPage() {
   const [filters, setFilters] = useState({ region: '', division: '', month: '', type: '' });
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => {
-      if (r.ok) setAuthed(true);
-    });
+    fetch('/api/auth/me', { cache: 'no-store' }).then(r => { if (r.ok) setAuthed(true); });
     loadCamps();
   }, []);
 
@@ -61,32 +58,9 @@ export default function CampsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, viewMode]);
 
-  const logout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/');
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-[#18181b] text-white px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M50 85 L25 60 L25 40 L75 40 L75 60 Z" fill="transparent" stroke="#18181b" /><path d="M35 25 Q50 10 65 25" stroke="#d9f99d" /><path d="M25 15 Q50 -5 75 15" stroke="#d9f99d" opacity="0.5"/></svg>
-          <span className="font-bold">RecruitRadar</span>
-        </Link>
-        <div className="flex items-center gap-4">
-          {authed ? (
-            <>
-              <Link href="/profile" className="text-sm font-semibold text-[#18181b] bg-[#d9f99d] hover:bg-[#bef264] px-4 py-2 rounded-lg transition">Settings & Selections</Link>
-              <button onClick={logout} className="text-sm text-white/60 hover:text-white">Log out</button>
-            </>
-          ) : (
-            <>
-              <Link href="/login" className="text-sm text-white/80 hover:text-white">Log In</Link>
-              <Link href="/signup" className="bg-[#d9f99d] text-[#18181b] text-sm font-semibold px-4 py-2 rounded-lg">Sign Up Free</Link>
-            </>
-          )}
-        </div>
-      </nav>
+      <Nav />
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
