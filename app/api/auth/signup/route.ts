@@ -16,7 +16,11 @@ export async function POST(req: NextRequest) {
     }
 
     const hash = await hashPassword(password);
-    const result = await sql`INSERT INTO athletes (email, password_hash, name) VALUES (${email}, ${hash}, ${name}) RETURNING id`;
+    const result = await sql`
+      INSERT INTO athletes (email, password_hash, name, trial_started_at, trial_ends_at, subscription_status)
+      VALUES (${email}, ${hash}, ${name}, NOW(), NOW() + INTERVAL '7 days', 'trialing')
+      RETURNING id
+    `;
     const athleteId = result[0].id;
     const token = await createToken(athleteId);
     const res = NextResponse.json({ success: true, athleteId });

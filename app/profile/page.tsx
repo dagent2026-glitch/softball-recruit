@@ -18,6 +18,9 @@ type Profile = {
   is_hitter: number; bats: string;
   target_divisions: string; target_conferences: string;
   target_regions: string; target_schools: string;
+  subscription_status?: string;
+  trial_started_at?: string | null;
+  trial_ends_at?: string | null;
 };
 
 function MultiCheck({ label, options, selected, onChange }: {
@@ -64,7 +67,7 @@ export default function ProfilePage() {
   const targetSchools: string[] = JSON.parse(profile.target_schools || '[]');
 
   useEffect(() => {
-    fetch('/api/auth/me', { cache: 'no-store' }).then(r => {
+    fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' }).then(r => {
       if (!r.ok) { router.push('/login'); return null; }
       return r.json();
     }).then(data => {
@@ -176,41 +179,95 @@ export default function ProfilePage() {
           </div>
         )}
         {tab === 'account' ? (
-          <form onSubmit={handleAccountSave} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-xl font-bold text-[#18181b] mb-4">Account Settings</h2>
-            {accountError && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">{accountError}</div>}
-            
-            <div className="space-y-4 max-w-md">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                <input type="email" required value={profile.email || ''} onChange={e => update('email', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
-              </div>
-              
-              <div className="pt-4 border-t border-gray-100 mt-6">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Change Password (Optional)</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} minLength={6}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+          <div className="space-y-6">
+            {/* Subscription section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-[#18181b] mb-4">Subscription</h2>
+              {(() => {
+                const status = profile.subscription_status || 'free';
+                const trialEndsAt = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null;
+                const trialActive = status === 'trialing' && trialEndsAt && trialEndsAt > new Date();
+                const isProActive = status === 'active';
+                const daysLeft = trialActive && trialEndsAt
+                  ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+                  : null;
+
+                return (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      {isProActive && (
+                        <><span className="inline-flex items-center gap-1.5 bg-[#d9f99d] text-[#18181b] text-sm font-bold px-3 py-1 rounded-full mb-1">⭐ Pro — Active</span>
+                        <p className="text-sm text-gray-500 mt-1">Registration links and alerts are unlocked.</p></>
+                      )}
+                      {trialActive && (
+                        <><span className="inline-flex items-center gap-1.5 bg-yellow-100 text-yellow-800 text-sm font-bold px-3 py-1 rounded-full mb-1">🎉 Free Trial — {daysLeft} day{daysLeft !== 1 ? 's' : ''} left</span>
+                        <p className="text-sm text-gray-500 mt-1">Upgrade to keep access after your trial ends.</p></>
+                      )}
+                      {!isProActive && !trialActive && (
+                        <><span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-600 text-sm font-bold px-3 py-1 rounded-full mb-1">Free Plan</span>
+                        <p className="text-sm text-gray-500 mt-1">Registration links are locked. Upgrade to unlock.</p></>
+                      )}
+                    </div>
+                    <div>
+                      {isProActive ? (
+                        <button
+                          onClick={async () => {
+                            const res = await fetch('/api/stripe/portal', { method: 'POST', credentials: 'include' });
+                            const data = await res.json();
+                            if (data.url) window.location.href = data.url;
+                          }}
+                          className="bg-[#18181b] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#1a3060] transition">
+                          Manage Billing →
+                        </button>
+                      ) : (
+                        <a href="/pricing"
+                          className="bg-[#d9f99d] text-[#18181b] text-sm font-bold px-4 py-2 rounded-lg hover:bg-[#bef264] transition">
+                          Upgrade to Pro →
+                        </a>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                    <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} minLength={6}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+                );
+              })()}
+            </div>
+
+            {/* Account settings */}
+            <form onSubmit={handleAccountSave} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-[#18181b] mb-4">Account Settings</h2>
+              {accountError && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">{accountError}</div>}
+              
+              <div className="space-y-4 max-w-md">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                  <input type="email" required value={profile.email || ''} onChange={e => update('email', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+                </div>
+                
+                <div className="pt-4 border-t border-gray-100 mt-6">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Change Password (Optional)</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                      <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} minLength={6}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                      <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} minLength={6}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="pt-6">
-                <button type="submit" disabled={saving}
-                  className="w-full bg-[#18181b] text-white hover:bg-black font-bold py-3 rounded-lg transition shadow-md disabled:opacity-50 text-lg">
-                  {saving ? 'Saving...' : 'Update Account Settings'}
-                </button>
+                <div className="pt-6">
+                  <button type="submit" disabled={saving}
+                    className="w-full bg-[#18181b] text-white hover:bg-black font-bold py-3 rounded-lg transition shadow-md disabled:opacity-50 text-lg">
+                    {saving ? 'Saving...' : 'Update Account Settings'}
+                  </button>
+                </div>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         ) : (
           <form onSubmit={(e) => handleSave(e, tab === 'targets')}>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

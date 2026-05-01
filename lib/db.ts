@@ -77,6 +77,17 @@ export async function initDb() {
     )
   `;
 
+  // Safe column migrations
+  await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS address_street TEXT`;
+  await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS address_city TEXT`;
+  await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS address_state TEXT`;
+  await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS address_zip TEXT`;
+  await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMPTZ`;
+  await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ`;
+  await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`;
+  await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT`;
+  await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trialing'`;
+
   // Seed camps if empty
   const result = await sql`SELECT COUNT(*)::int as c FROM camps`;
   const count = result[0].c;
@@ -130,6 +141,11 @@ export type Athlete = {
   is_pitcher: number; is_catcher: number; primary_position?: string; is_hitter: number;
   bats: string; target_divisions: string; target_conferences: string;
   target_regions: string; target_schools: string; created_at: string;
+  trial_started_at?: string | null;
+  trial_ends_at?: string | null;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  subscription_status?: string;
 };
 
 export type Camp = {

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
 
@@ -9,6 +10,12 @@ type Camp = {
   start_date: string; end_date: string; month: string; camp_type: string;
   cost: string; grad_years: string; position_focus: string;
   registration_link: string; source: string;
+};
+
+type UserPlan = {
+  subscription_status: string;
+  trial_ends_at: string | null;
+  trial_started_at: string | null;
 };
 
 const DIVISION_COLORS: Record<string, string> = {
@@ -25,16 +32,48 @@ const TYPE_COLORS: Record<string, string> = {
   'Showcase': 'bg-pink-100 text-pink-800',
 };
 
+function isPro(plan: UserPlan | null): boolean {
+  if (!plan) return false;
+  if (plan.subscription_status === 'active') return true;
+  if (plan.subscription_status === 'trialing' && plan.trial_ends_at) {
+    return new Date(plan.trial_ends_at) > new Date();
+  }
+  return false;
+}
+
+function trialDaysLeft(plan: UserPlan | null): number | null {
+  if (!plan || plan.subscription_status !== 'trialing' || !plan.trial_ends_at) return null;
+  const diff = new Date(plan.trial_ends_at).getTime() - Date.now();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
 export default function CampsPage() {
+  const router = useRouter();
   const [camps, setCamps] = useState<Camp[]>([]);
   const [loading, setLoading] = useState(true);
   const [authed, setAuthed] = useState(false);
+  const [userPlan, setUserPlan] = useState<UserPlan | null>(null);
   const [viewMode, setViewMode] = useState<'all'|'matched'>('all');
   const [filters, setFilters] = useState({ region: '', division: '', month: '', type: '' });
 
   useEffect(() => {
-    fetch('/api/auth/me', { cache: 'no-store' }).then(r => { if (r.ok) setAuthed(true); });
+    fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' }).then(r => {
+      if (r.ok) {
+        setAuthed(true);
+        return r.json();
+      }
+      return null;
+    }).then(data => {
+      if (data) {
+        setUserPlan({
+          subscription_status: data.subscription_status || 'free',
+          trial_ends_at: data.trial_ends_at || null,
+          trial_started_at: data.trial_started_at || null,
+        });
+      }
+    });
     loadCamps();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadCamps = async (matched = false) => {
@@ -58,11 +97,41 @@ export default function CampsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, viewMode]);
 
+  const pro = isPro(userPlan);
+  const daysLeft = trialDaysLeft(userPlan);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Nav />
 
       <div className="max-w-6xl mx-auto px-4 py-8">
+
+        {/* Trial banner */}
+        {authed && userPlan?.subscription_status === 'trialing' && daysLeft !== null && (
+          <div className="bg-[#d9f99d] border border-[#bef264] text-[#18181b] rounded-xl p-4 mb-6 flex items-center justify-between">
+            <div>
+              <p className="font-bold">🎉 Your free trial ends in {daysLeft} day{daysLeft !== 1 ? 's' : ''}</p>
+              <p className="text-sm text-[#18181b]/70">Registration links are unlocked. Upgrade to keep access after your trial.</p>
+            </div>
+            <Link href="/pricing" className="bg-[#18181b] text-[#d9f99d] text-sm font-bold px-4 py-2 rounded-lg whitespace-nowrap ml-4 hover:bg-[#1a3060] transition">
+              Upgrade Now →
+            </Link>
+          </div>
+        )}
+
+        {/* Trial expired banner */}
+        {authed && userPlan?.subscription_status === 'trialing' && daysLeft === 0 && (
+          <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 mb-6 flex items-center justify-between">
+            <div>
+              <p className="font-bold">⏰ Your free trial has ended</p>
+              <p className="text-sm">Upgrade to Pro to unlock registration links and get alerts.</p>
+            </div>
+            <Link href="/pricing" className="bg-red-600 text-white text-sm font-bold px-4 py-2 rounded-lg whitespace-nowrap ml-4 hover:bg-red-700 transition">
+              Upgrade →
+            </Link>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold text-[#18181b]">Softball Camps 2026</h1>
@@ -179,10 +248,18 @@ export default function CampsPage() {
                   )}
                 </div>
                 {camp.registration_link && (
-                  <a href={camp.registration_link} target="_blank" rel="noopener noreferrer"
-                    className="block w-full text-center bg-[#18181b] hover:bg-[#1a3060] text-white text-sm font-semibold py-2 rounded-lg transition">
-                    Register / Learn More →
-                  </a>
+                  pro ? (
+                    <a href={camp.registration_link} target="_blank" rel="noopener noreferrer"
+                      className="block w-full text-center bg-[#18181b] hover:bg-[#1a3060] text-white text-sm font-semibold py-2 rounded-lg transition">
+                      Register / Learn More →
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => router.push('/pricing')}
+                      className="block w-full text-center bg-gray-100 text-gray-500 text-sm font-semibold py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-200 transition">
+                      🔒 Unlock Registration Link →
+                    </button>
+                  )
                 )}
               </div>
             ))}

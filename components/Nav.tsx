@@ -17,7 +17,7 @@ export default function Nav() {
   const [authed, setAuthed] = useState<boolean | null>(null); // null = loading
 
   useEffect(() => {
-    fetch('/api/auth/me', { cache: 'no-store' })
+    fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' })
       .then(r => setAuthed(r.ok))
       .catch(() => setAuthed(false));
   }, []);
