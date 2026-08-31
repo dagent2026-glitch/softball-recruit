@@ -26,6 +26,8 @@ export default function ScheduleTab({ targetSchools }: { targetSchools: string[]
   const [allCamps, setAllCamps] = useState<Camp[]>([]);
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [campSearch, setCampSearch] = useState('');
+  const [rangeStart, setRangeStart] = useState('');
+  const [rangeEnd, setRangeEnd] = useState('');
 
   const loadSchedule = () => fetch('/api/schedule', { cache: 'no-store', credentials: 'include' })
     .then(r => r.json()).then(data => setSchedule(data.schedule || []));
@@ -41,10 +43,18 @@ export default function ScheduleTab({ targetSchools }: { targetSchools: string[]
   }, [showAddPanel, allCamps.length]);
 
   const handleGenerate = async () => {
+    if (rangeStart && rangeEnd && rangeEnd < rangeStart) {
+      setError('End date must be after start date.');
+      return;
+    }
     setGenerating(true);
     setError('');
     try {
-      const res = await fetch('/api/schedule/generate', { method: 'POST' });
+      const res = await fetch('/api/schedule/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rangeStart: rangeStart || undefined, rangeEnd: rangeEnd || undefined }),
+      });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Could not generate a schedule'); return; }
       await loadSchedule();
@@ -94,10 +104,33 @@ export default function ScheduleTab({ targetSchools }: { targetSchools: string[]
             Add target schools on the Target Schools tab first — the optimal schedule is built around your priority list.
           </p>
         ) : (
-          <button type="button" onClick={handleGenerate} disabled={generating}
-            className="bg-[#18181b] hover:bg-[#1a3060] text-white font-bold px-6 py-3 rounded-lg transition disabled:opacity-50">
-            {generating ? 'Generating...' : '✨ Generate Optimal Schedule'}
-          </button>
+          <>
+            <div className="flex flex-wrap items-end gap-3 mb-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">From (optional)</label>
+                <input type="date" value={rangeStart} onChange={e => setRangeStart(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">To (optional)</label>
+                <input type="date" value={rangeEnd} onChange={e => setRangeEnd(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+              </div>
+              {(rangeStart || rangeEnd) && (
+                <button type="button" onClick={() => { setRangeStart(''); setRangeEnd(''); }}
+                  className="text-xs text-gray-500 hover:text-gray-700 pb-2.5">Clear</button>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mb-3">
+              {rangeStart || rangeEnd
+                ? `Only camps ${rangeStart ? `from ${rangeStart}` : 'up to'}${rangeStart && rangeEnd ? ' ' : ''}${rangeEnd ? `through ${rangeEnd}` : ''} will be considered.`
+                : 'Leave blank to consider camps across your whole target-school list, with no date window.'}
+            </p>
+            <button type="button" onClick={handleGenerate} disabled={generating}
+              className="bg-[#18181b] hover:bg-[#1a3060] text-white font-bold px-6 py-3 rounded-lg transition disabled:opacity-50">
+              {generating ? 'Generating...' : '✨ Generate Optimal Schedule'}
+            </button>
+          </>
         )}
         {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
       </div>
