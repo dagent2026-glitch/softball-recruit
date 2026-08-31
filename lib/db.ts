@@ -86,6 +86,8 @@ export async function initDb() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE coaches ADD COLUMN IF NOT EXISTS reset_password_token TEXT`;
+  await sql`ALTER TABLE coaches ADD COLUMN IF NOT EXISTS reset_password_expires_at TIMESTAMPTZ`;
 
   await sql`
     CREATE TABLE IF NOT EXISTS teams (
