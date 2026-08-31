@@ -6,6 +6,16 @@ const SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'softball-recruit-secret-change-in-prod-2026'
 );
 
+// Email addresses are case-insensitive in practice everywhere that matters
+// (every major provider treats "Foo@x.com" and "foo@x.com" as the same
+// mailbox), but a raw SQL UNIQUE constraint on the column is not. Always
+// normalize before checking uniqueness, looking up, or storing an email so
+// the same person can't end up with two accounts by typing/autocapitalizing
+// it differently across visits.
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
 }

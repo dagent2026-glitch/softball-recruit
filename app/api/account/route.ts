@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionAthleteId, hashPassword } from '@/lib/auth';
+import { getSessionAthleteId, hashPassword, normalizeEmail } from '@/lib/auth';
 import { sql, initDb } from '@/lib/db';
 
 export async function PUT(req: NextRequest) {
   const athleteId = await getSessionAthleteId();
   if (!athleteId) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-  
+
   try {
     await initDb();
-    const { email, password } = await req.json();
+    const body = await req.json();
+    const { password } = body;
+    const email = body.email ? normalizeEmail(body.email) : body.email;
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });

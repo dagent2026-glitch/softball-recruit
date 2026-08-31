@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql, initDb } from '@/lib/db';
-import { hashPassword, createToken, setAuthCookie } from '@/lib/auth';
+import { hashPassword, createToken, setAuthCookie, normalizeEmail } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
     await initDb();
-    const { email, password, name } = await req.json();
+    const body = await req.json();
+    const email = body.email ? normalizeEmail(body.email) : body.email;
+    const { password, name } = body;
     if (!email || !password || !name) {
       return NextResponse.json({ error: 'Name, email and password required' }, { status: 400 });
     }

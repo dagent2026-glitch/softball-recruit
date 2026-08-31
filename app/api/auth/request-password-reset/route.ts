@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server';
 import { sql, initDb } from '@/lib/db';
 import crypto from 'crypto';
 import { dispatcher } from '@/lib/dispatcher';
+import { normalizeEmail } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
     await initDb();
-    const { email } = await request.json();
+    const body = await request.json();
+    const email = body.email ? normalizeEmail(body.email) : body.email;
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required.' }, { status: 400 });
