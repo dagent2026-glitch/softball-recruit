@@ -14,7 +14,8 @@ type Athlete = {
   target_schools: string[];
 };
 
-type Team = { id: number; name: string; join_code: string };
+type Team = { id: number; name: string; join_code: string; coach_invite_code: string };
+type CoachEntry = { id: number; name: string; role: 'owner' | 'assistant' };
 
 export default function CoachTeamRosterPage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function CoachTeamRosterPage() {
 
   const [coachName, setCoachName] = useState('');
   const [team, setTeam] = useState<Team | null>(null);
+  const [coaches, setCoaches] = useState<CoachEntry[]>([]);
   const [roster, setRoster] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,6 +40,7 @@ export default function CoachTeamRosterPage() {
       const data = await r.json();
       if (!r.ok) { setError(data.error || 'Could not load roster'); setLoading(false); return; }
       setTeam(data.team);
+      setCoaches(data.coaches || []);
       setRoster(data.roster);
       setLoading(false);
     });
@@ -65,8 +68,19 @@ export default function CoachTeamRosterPage() {
             <div className="mb-6 mt-2">
               <h1 className="text-2xl font-bold text-[#18181b]">{team?.name}</h1>
               <p className="text-gray-500 text-sm mt-1">
-                {roster.length} player{roster.length === 1 ? '' : 's'} · join code <span className="font-mono font-semibold">{team?.join_code}</span>
+                {roster.length} player{roster.length === 1 ? '' : 's'} · player join code <span className="font-mono font-semibold">{team?.join_code}</span>
+                {' · '}coach invite code <span className="font-mono font-semibold">{team?.coach_invite_code}</span>
               </p>
+              {coaches.length > 0 && (
+                <p className="text-gray-500 text-sm mt-2">
+                  <span className="font-semibold text-gray-600">Coaching staff:</span>{' '}
+                  {coaches.map((c, i) => (
+                    <span key={c.id}>
+                      {c.name}{c.role === 'owner' ? ' (Owner)' : ''}{i < coaches.length - 1 ? ', ' : ''}
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
 
             {roster.length === 0 ? (

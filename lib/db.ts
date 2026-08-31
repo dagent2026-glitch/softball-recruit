@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless';
+import { generateTeamCode } from './codes';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -108,6 +109,35 @@ export async function initDb() {
       UNIQUE(team_id, athlete_id)
     )
   `;
+
+  // Assistant coaches on a team. The team's owner (teams.coach_id) is NOT
+  // duplicated in here — this table only holds additional coaches.
+  await sql`
+    CREATE TABLE IF NOT EXISTS team_coaches (
+      id SERIAL PRIMARY KEY,
+      team_id INTEGER NOT NULL REFERENCES teams(id),
+      coach_id INTEGER NOT NULL REFERENCES coaches(id),
+      joined_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(team_id, coach_id)
+    )
+  `;
+
+  // Separate invite code for coaches (distinct from the player join_code)
+  // so a coach can't accidentally join a roster as a "player" and vice versa.
+  await sql`ALTER TABLE teams ADD COLUMN IF NOT EXISTS coach_invite_code TEXT`;
+  const teamsMissingInviteCode = await sql`SELECT id FROM teams WHERE coach_invite_code IS NULL`;
+  for (const t of teamsMissingInviteCode) {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = generateTeamCode();
+      try {
+        await sql`UPDATE teams SET coach_invite_code = ${code} WHERE id = ${t.id}`;
+        break;
+      } catch {
+        // collided with another team's code — retry
+      }
+    }
+  }
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS teams_coach_invite_code_idx ON teams (coach_invite_code)`;
 
   // Safe column migrations
   await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS address_street TEXT`;

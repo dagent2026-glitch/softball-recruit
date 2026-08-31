@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionCoachId } from '@/lib/auth';
 import { sql, initDb } from '@/lib/db';
-
-const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // no 0/O/1/I/L — avoids visual ambiguity
-
-function generateJoinCode(): string {
-  let code = '';
-  for (let i = 0; i < 6; i++) code += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
-  return code;
-}
+import { generateTeamCode } from '@/lib/codes';
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,20 +14,21 @@ export async function POST(req: NextRequest) {
 
     let team = null;
     for (let attempt = 0; attempt < 5 && !team; attempt++) {
-      const code = generateJoinCode();
+      const joinCode = generateTeamCode();
+      const coachInviteCode = generateTeamCode();
       try {
         const rows = await sql`
-          INSERT INTO teams (coach_id, name, join_code)
-          VALUES (${coachId}, ${name.trim()}, ${code})
-          RETURNING id, name, join_code, created_at
+          INSERT INTO teams (coach_id, name, join_code, coach_invite_code)
+          VALUES (${coachId}, ${name.trim()}, ${joinCode}, ${coachInviteCode})
+          RETURNING id, name, join_code, coach_invite_code, created_at
         `;
         team = rows[0];
       } catch {
-        // join_code collision (unique constraint) — retry with a new code
+        // join_code/coach_invite_code collision (unique constraint) — retry with new codes
       }
     }
     if (!team) return NextResponse.json({ error: 'Could not generate a unique join code, try again' }, { status: 500 });
 
-    return NextResponse.json({ team: { ...team, member_count: 0 } });
+    return NextResponse.json({ team: { ...team, member_count: 0, coach_count: 1, role: 'owner' } });
   } catch (e) { console.error(e); return NextResponse.json({ error: 'Server error' }, { status: 500 }); }
 }

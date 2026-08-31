@@ -14,11 +14,22 @@ export async function GET() {
     if (coachRows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     const teams = await sql`
-      SELECT t.id, t.name, t.join_code, t.created_at,
-        (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = t.id) AS member_count
+      SELECT t.id, t.name, t.join_code, t.coach_invite_code, t.created_at, 'owner' AS role,
+        (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = t.id) AS member_count,
+        (SELECT COUNT(*)::int FROM team_coaches tc WHERE tc.team_id = t.id) + 1 AS coach_count
       FROM teams t
       WHERE t.coach_id = ${coachId}
-      ORDER BY t.created_at DESC
+
+      UNION ALL
+
+      SELECT t.id, t.name, t.join_code, t.coach_invite_code, t.created_at, 'assistant' AS role,
+        (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = t.id) AS member_count,
+        (SELECT COUNT(*)::int FROM team_coaches tc2 WHERE tc2.team_id = t.id) + 1 AS coach_count
+      FROM teams t
+      JOIN team_coaches tc ON tc.team_id = t.id
+      WHERE tc.coach_id = ${coachId}
+
+      ORDER BY created_at DESC
     `;
 
     return NextResponse.json({ coach: coachRows[0], teams });
