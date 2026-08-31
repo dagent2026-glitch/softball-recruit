@@ -35,12 +35,17 @@ export async function POST(request: Request) {
 
     const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password?token=${resetToken}`;
 
-    await dispatcher.resend.emails.send({
+    const { data, error } = await dispatcher.resend.emails.send({
       from: 'RecruitRadar <alerts@recruitradar.co>',
       to: email,
       subject: 'RecruitRadar Password Reset',
       html: `<p>You requested a password reset for your RecruitRadar account.</p><p>Click <a href="${resetLink}">here</a> to reset your password. This link is valid for 1 hour.</p><p>If you did not request this, please ignore this email.</p>`,
     });
+    if (error) {
+      console.error('[request-password-reset] Resend send failed:', JSON.stringify(error));
+    } else {
+      console.log('[request-password-reset] Resend send succeeded, id:', data?.id);
+    }
 
     return NextResponse.json({ message: 'If an account with that email exists, a password reset link has been sent.' }, { status: 200 });
   } catch (error) {
