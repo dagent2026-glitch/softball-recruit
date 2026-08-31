@@ -1,20 +1,18 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
-import bcrypt from 'bcryptjs';
+import { sql, initDb } from '@/lib/db';
 import crypto from 'crypto';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { dispatcher } from '@/lib/dispatcher';
 
 export async function POST(request: Request) {
   try {
+    await initDb();
     const { email } = await request.json();
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required.' }, { status: 400 });
     }
 
-    const { rows } = await sql`SELECT id, email FROM athletes WHERE email = ${email}`;
+    const rows = await sql`SELECT id, email FROM athletes WHERE email = ${email}`;
     const user = rows[0];
 
     if (!user) {
@@ -37,7 +35,7 @@ export async function POST(request: Request) {
 
     const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password?token=${resetToken}`;
 
-    await resend.emails.send({
+    await dispatcher.resend.emails.send({
       from: 'RecruitRadar <alerts@recruitradar.co>',
       to: email,
       subject: 'RecruitRadar Password Reset',

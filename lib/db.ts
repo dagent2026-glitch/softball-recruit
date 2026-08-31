@@ -87,6 +87,8 @@ export async function initDb() {
   await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`;
   await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT`;
   await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'trialing'`;
+  await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS reset_password_token TEXT`;
+  await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS reset_password_expires_at TIMESTAMPTZ`;
 
   // Seed camps if empty
   const result = await sql`SELECT COUNT(*)::int as c FROM camps`;
