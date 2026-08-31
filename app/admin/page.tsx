@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 
 type Camp = { id: number; school_name: string; camp_name: string; division: string; start_date: string; camp_type: string; source: string; created_at: string; };
+type PromoCode = { id: number; code: string; description: string | null; max_redemptions: number | null; redemption_count: number; expires_at: string | null; active: boolean; created_at: string; };
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -10,6 +11,8 @@ export default function AdminPage() {
   const [pw, setPw] = useState('');
   const [camps, setCamps] = useState<Camp[]>([]);
   const [alertLog, setAlertLog] = useState<{id:number;type:string;sent_at:string;school_name:string;camp_name:string}[]>([]);
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
+  const [promoForm, setPromoForm] = useState({ code: '', description: '', max_redemptions: '', expires_at: '' });
   const [msg, setMsg] = useState('');
   const [form, setForm] = useState({
     school_name:'', camp_name:'', division:'Power 4', conference:'SEC',
@@ -24,11 +27,41 @@ export default function AdminPage() {
     else alert('Wrong password');
   };
 
+  const loadPromoCodes = () => fetch('/api/admin/promo-codes', { headers: { 'x-admin-key': 'slugger2026' } })
+    .then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setPromoCodes(d); });
+
   useEffect(() => {
     if (!authed) return;
     fetch('/api/camps').then(r => r.json()).then(setCamps);
     fetch('/api/alerts', { headers: { 'x-admin-key': 'slugger2026' } }).then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setAlertLog(d); });
+    loadPromoCodes();
   }, [authed]);
+
+  const createPromoCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = await fetch('/api/admin/promo-codes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': 'slugger2026' },
+      body: JSON.stringify(promoForm),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setMsg(`✅ Promo code ${data.code} created`);
+      setPromoForm({ code: '', description: '', max_redemptions: '', expires_at: '' });
+      loadPromoCodes();
+    } else {
+      setMsg(`❌ Error: ${data.error}`);
+    }
+  };
+
+  const togglePromoCode = async (id: number, active: boolean) => {
+    await fetch('/api/admin/promo-codes', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': 'slugger2026' },
+      body: JSON.stringify({ id, active }),
+    });
+    loadPromoCodes();
+  };
 
   const addCamp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,6 +210,58 @@ export default function AdminPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Promo codes */}
+        <div className="grid lg:grid-cols-2 gap-6 mt-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="font-bold text-[#18181b] mb-4">Create Promo Code</h2>
+            <p className="text-xs text-gray-500 mb-3">Redeeming a code grants permanent free Pro access, same as a paying subscriber. Limits control who can redeem it, not how long access lasts.</p>
+            <form onSubmit={createPromoCode} className="space-y-3">
+              <input required placeholder="CODE (e.g. FOUNDER2026)" value={promoForm.code}
+                onChange={e => setPromoForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+                className="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
+              <input placeholder="Description (internal note)" value={promoForm.description}
+                onChange={e => setPromoForm(f => ({ ...f, description: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
+              <div className="grid grid-cols-2 gap-3">
+                <input type="number" min="1" placeholder="Max redemptions (blank = unlimited)" value={promoForm.max_redemptions}
+                  onChange={e => setPromoForm(f => ({ ...f, max_redemptions: e.target.value }))}
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
+                <input type="date" placeholder="Expires (blank = never)" value={promoForm.expires_at}
+                  onChange={e => setPromoForm(f => ({ ...f, expires_at: e.target.value }))}
+                  className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#d9f99d]" />
+              </div>
+              <button type="submit" className="w-full bg-[#18181b] text-white font-bold py-2.5 rounded-lg hover:bg-[#1a3060] transition">
+                Create Code
+              </button>
+            </form>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="font-bold text-[#18181b] mb-3">Promo Codes ({promoCodes.length})</h2>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {promoCodes.length === 0 ? (
+                <p className="text-gray-400 text-sm">No promo codes yet</p>
+              ) : promoCodes.map(p => (
+                <div key={p.id} className="flex items-center justify-between text-sm py-2 border-b border-gray-100 last:border-0">
+                  <div>
+                    <span className="font-mono font-bold">{p.code}</span>
+                    {!p.active && <span className="ml-2 text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">inactive</span>}
+                    {p.description && <p className="text-gray-500 text-xs mt-0.5">{p.description}</p>}
+                    <p className="text-gray-400 text-xs mt-0.5">
+                      {p.redemption_count} redeemed{p.max_redemptions ? ` / ${p.max_redemptions} max` : ''}
+                      {p.expires_at ? ` · expires ${p.expires_at.slice(0, 10)}` : ''}
+                    </p>
+                  </div>
+                  <button onClick={() => togglePromoCode(p.id, !p.active)}
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap ${p.active ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100'}`}>
+                    {p.active ? 'Deactivate' : 'Reactivate'}
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>

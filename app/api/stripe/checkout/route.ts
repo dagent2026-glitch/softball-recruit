@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     mode: 'subscription',
     payment_method_types: ['card'],
     line_items: [{ price: priceId, quantity: 1 }],
+    allow_promotion_codes: true,
     success_url: `${baseUrl}/profile?upgraded=1`,
     cancel_url: `${baseUrl}/pricing`,
     metadata: { athlete_id: String(athleteId) },

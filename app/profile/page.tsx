@@ -20,6 +20,7 @@ type Profile = {
   target_divisions: string; target_conferences: string;
   target_regions: string; target_schools: string;
   subscription_status?: string;
+  promo_redeemed_code?: string | null;
   trial_started_at?: string | null;
   trial_ends_at?: string | null;
 };
@@ -65,6 +66,10 @@ export default function ProfilePage() {
   const [joinCode, setJoinCode] = useState('');
   const [joiningTeam, setJoiningTeam] = useState(false);
   const [joinError, setJoinError] = useState('');
+  const [promoCode, setPromoCode] = useState('');
+  const [redeemingPromo, setRedeemingPromo] = useState(false);
+  const [promoError, setPromoError] = useState('');
+  const [promoSuccess, setPromoSuccess] = useState('');
 
   const targetDivisions: string[] = JSON.parse(profile.target_divisions || '[]');
   const targetConferences: string[] = JSON.parse(profile.target_conferences || '[]');
@@ -120,6 +125,32 @@ export default function ProfilePage() {
       setJoinError('Something went wrong');
     } finally {
       setJoiningTeam(false);
+    }
+  };
+
+  const handleRedeemPromo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!promoCode.trim()) return;
+    setRedeemingPromo(true);
+    setPromoError('');
+    setPromoSuccess('');
+    try {
+      const res = await fetch('/api/promo/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setPromoError(data.error || 'Could not redeem code'); return; }
+      setPromoCode('');
+      setPromoSuccess("You're on Pro now! 🎉");
+      const meRes = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' });
+      const meData = await meRes.json();
+      setProfile(p => ({ ...p, ...meData }));
+    } catch {
+      setPromoError('Something went wrong');
+    } finally {
+      setRedeemingPromo(false);
     }
   };
 
@@ -241,6 +272,7 @@ export default function ProfilePage() {
                 const trialEndsAt = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null;
                 const trialActive = status === 'trialing' && trialEndsAt && trialEndsAt > new Date();
                 const isProActive = status === 'active';
+                const isPromoAccount = isProActive && !!profile.promo_redeemed_code;
                 const daysLeft = trialActive && trialEndsAt
                   ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
                   : null;
@@ -248,7 +280,11 @@ export default function ProfilePage() {
                 return (
                   <div className="flex items-center justify-between">
                     <div>
-                      {isProActive && (
+                      {isPromoAccount && (
+                        <><span className="inline-flex items-center gap-1.5 bg-[#d9f99d] text-[#18181b] text-sm font-bold px-3 py-1 rounded-full mb-1">🎁 Pro — Free via promo code</span>
+                        <p className="text-sm text-gray-500 mt-1">Registration links and alerts are unlocked. Code: <span className="font-mono">{profile.promo_redeemed_code}</span></p></>
+                      )}
+                      {isProActive && !isPromoAccount && (
                         <><span className="inline-flex items-center gap-1.5 bg-[#d9f99d] text-[#18181b] text-sm font-bold px-3 py-1 rounded-full mb-1">⭐ Pro — Active</span>
                         <p className="text-sm text-gray-500 mt-1">Registration links and alerts are unlocked.</p></>
                       )}
@@ -262,7 +298,7 @@ export default function ProfilePage() {
                       )}
                     </div>
                     <div>
-                      {isProActive ? (
+                      {isPromoAccount ? null : isProActive ? (
                         <button
                           onClick={async () => {
                             const res = await fetch('/api/stripe/portal', { method: 'POST', credentials: 'include' });
@@ -282,6 +318,20 @@ export default function ProfilePage() {
                   </div>
                 );
               })()}
+
+              {!(profile.subscription_status === 'active') && (
+                <form onSubmit={handleRedeemPromo} className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                  <input type="text" placeholder="Have a promo code?" value={promoCode}
+                    onChange={e => setPromoCode(e.target.value.toUpperCase())}
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+                  <button type="submit" disabled={redeemingPromo || !promoCode.trim()}
+                    className="bg-[#18181b] hover:bg-[#1a3060] text-white font-semibold text-sm px-4 py-2 rounded-lg transition disabled:opacity-50 whitespace-nowrap">
+                    {redeemingPromo ? 'Redeeming...' : 'Redeem'}
+                  </button>
+                </form>
+              )}
+              {promoError && <p className="text-red-600 text-sm mt-2">{promoError}</p>}
+              {promoSuccess && <p className="text-lime-700 text-sm mt-2">{promoSuccess}</p>}
             </div>
 
             {/* Coach / Team access */}

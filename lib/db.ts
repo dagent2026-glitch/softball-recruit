@@ -151,6 +151,25 @@ export async function initDb() {
   }
   await sql`CREATE UNIQUE INDEX IF NOT EXISTS teams_coach_invite_code_idx ON teams (coach_invite_code)`;
 
+  // Promo codes — admin-created codes that grant free Pro access.
+  // Redeeming one sets subscription_status = 'active' directly (the same
+  // value real Stripe subscribers have) so every existing Pro-gating check
+  // in the app just works; promo_redeemed_code on the athlete is what lets
+  // the UI tell a comped account apart from a real paying one.
+  await sql`
+    CREATE TABLE IF NOT EXISTS promo_codes (
+      id SERIAL PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      description TEXT,
+      max_redemptions INTEGER,
+      redemption_count INTEGER NOT NULL DEFAULT 0,
+      expires_at TIMESTAMPTZ,
+      active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS promo_redeemed_code TEXT`;
+
   // Safe column migrations
   await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS address_street TEXT`;
   await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS address_city TEXT`;
