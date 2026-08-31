@@ -433,7 +433,7 @@ export default function ProfilePage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     Target Schools
-                    <span className="ml-2 text-[#d9f99d] font-normal text-xs">({targetSchools.length} selected — instant alerts when these post camps)</span>
+                    <span className="ml-2 text-lime-700 font-normal text-xs">({targetSchools.length} selected — instant alerts when these post camps)</span>
                   </label>
                   <input type="text" placeholder="Search schools..."
                     value={schoolSearch} onChange={e => setSchoolSearch(e.target.value)}

@@ -195,7 +195,7 @@ export default function CampsPage() {
             <p className="text-gray-500">No camps match your filters.</p>
             {viewMode === 'matched' && (
               <p className="text-sm text-gray-400 mt-2">
-                <Link href="/profile" className="text-[#d9f99d] hover:underline">Update your profile</Link> to get better matches.
+                <Link href="/profile" className="text-lime-700 hover:underline">Update your profile</Link> to get better matches.
               </p>
             )}
           </div>
