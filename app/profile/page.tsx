@@ -66,6 +66,15 @@ export default function ProfilePage() {
   const targetRegions: string[] = JSON.parse(profile.target_regions || '[]');
   const targetSchools: string[] = JSON.parse(profile.target_schools || '[]');
 
+  const moveTargetSchool = (from: number, offset: number) => {
+    const to = from + offset;
+    if (to < 0 || to >= targetSchools.length) return;
+    const arr = [...targetSchools];
+    const [item] = arr.splice(from, 1);
+    arr.splice(to, 0, item);
+    updateJSON('target_schools', arr);
+  };
+
   useEffect(() => {
     fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' }).then(r => {
       if (!r.ok) { router.push('/login'); return null; }
@@ -431,13 +440,22 @@ export default function ProfilePage() {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
 
                   {targetSchools.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                      {targetSchools.map(s => (
-                        <span key={s} className="bg-[#18181b] text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                          {s}
+                    <div className="flex flex-col gap-1.5 mb-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                      <p className="text-xs text-gray-500 mb-0.5">Ranked by priority — use the arrows to reorder</p>
+                      {targetSchools.map((s, i) => (
+                        <div key={s} className="bg-[#18181b] text-white text-xs px-2 py-1.5 rounded-full flex items-center gap-2">
+                          <span className="text-[#d9f99d] font-bold w-4 text-center shrink-0">{i + 1}</span>
+                          <span className="flex-1">{s}</span>
+                          <button type="button" onClick={() => moveTargetSchool(i, -1)} disabled={i === 0}
+                            aria-label={`Move ${s} up`}
+                            className="text-white/70 hover:text-white disabled:opacity-25 disabled:hover:text-white/70 disabled:cursor-not-allowed">↑</button>
+                          <button type="button" onClick={() => moveTargetSchool(i, 1)} disabled={i === targetSchools.length - 1}
+                            aria-label={`Move ${s} down`}
+                            className="text-white/70 hover:text-white disabled:opacity-25 disabled:hover:text-white/70 disabled:cursor-not-allowed">↓</button>
                           <button type="button" onClick={() => updateJSON('target_schools', targetSchools.filter(x => x !== s))}
+                            aria-label={`Remove ${s}`}
                             className="text-white/70 hover:text-white">×</button>
-                        </span>
+                        </div>
                       ))}
                     </div>
                   )}
