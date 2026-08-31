@@ -62,15 +62,15 @@ export const D1_SCHOOLS = [
   // Other D1
   'Alabama State','Albany','American','Belmont','Bethune-Cookman',
   'Campbell','College of Charleston','Columbia','Cornell','Delaware',
-  'Drexel','Duke','Eastern Illinois','Eastern Kentucky','Elon',
+  'Drexel','Eastern Illinois','Eastern Kentucky','Elon',
   'Florida A&M','Florida Gulf Coast','Gardner-Webb','Harvard',
   'High Point','Hofstra','Jacksonville','Jacksonville State',
-  'James Madison','Kennesaw State','Lehigh','Liberty','Lipscomb',
+  'Kennesaw State','Lehigh','Liberty','Lipscomb',
   'Long Island','Longwood','Maine','Marist','McNeese State',
   'Montana','Monmouth','Morehead State','Murray State','North Dakota State',
   'Northern Illinois','Portland','Presbyterian','Sacred Heart',
   'San Jose State','Seattle','Siena','Southeast Missouri State',
-  'Tennessee State','Tennessee Tech','Texas Southern','UNLV',
+  'Tennessee State','Tennessee Tech','Texas Southern',
   'Vermont','Wagner','Weber State','William & Mary',
 ].sort();
 
