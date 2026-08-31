@@ -11,8 +11,18 @@ export async function POST(req: NextRequest) {
     const { code } = await req.json();
     if (!code || !code.trim()) return NextResponse.json({ error: 'Join code is required' }, { status: 400 });
 
-    const teamRows = await sql`SELECT id, name FROM teams WHERE join_code = ${code.trim().toUpperCase()}`;
-    if (teamRows.length === 0) return NextResponse.json({ error: 'No team found with that code' }, { status: 404 });
+    const normalizedCode = code.trim().toUpperCase();
+    const teamRows = await sql`SELECT id, name FROM teams WHERE join_code = ${normalizedCode}`;
+    if (teamRows.length === 0) {
+      // Common mix-up: coaches share the coach invite code instead of the
+      // player join code. Give a specific, actionable error instead of a
+      // generic "not found" when that's what actually happened.
+      const coachCodeMatch = await sql`SELECT id FROM teams WHERE coach_invite_code = ${normalizedCode}`;
+      if (coachCodeMatch.length > 0) {
+        return NextResponse.json({ error: "That's a coach invite code, not a player join code. Ask your coach for the player join code instead." }, { status: 400 });
+      }
+      return NextResponse.json({ error: 'No team found with that code' }, { status: 404 });
+    }
     const team = teamRows[0];
 
     const existing = await sql`SELECT id FROM team_members WHERE team_id = ${team.id} AND athlete_id = ${athleteId}`;

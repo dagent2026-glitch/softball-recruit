@@ -11,8 +11,17 @@ export async function POST(req: NextRequest) {
     const { code } = await req.json();
     if (!code || !code.trim()) return NextResponse.json({ error: 'Invite code is required' }, { status: 400 });
 
-    const teamRows = await sql`SELECT id, name, coach_id FROM teams WHERE coach_invite_code = ${code.trim().toUpperCase()}`;
-    if (teamRows.length === 0) return NextResponse.json({ error: 'No team found with that invite code' }, { status: 404 });
+    const normalizedCode = code.trim().toUpperCase();
+    const teamRows = await sql`SELECT id, name, coach_id FROM teams WHERE coach_invite_code = ${normalizedCode}`;
+    if (teamRows.length === 0) {
+      // Common mix-up: entering the player join code here instead of the
+      // coach invite code.
+      const playerCodeMatch = await sql`SELECT id FROM teams WHERE join_code = ${normalizedCode}`;
+      if (playerCodeMatch.length > 0) {
+        return NextResponse.json({ error: "That's a player join code, not a coach invite code. Ask the head coach for the coach invite code instead." }, { status: 400 });
+      }
+      return NextResponse.json({ error: 'No team found with that invite code' }, { status: 404 });
+    }
     const team = teamRows[0];
 
     if (team.coach_id === coachId) {
