@@ -60,6 +60,10 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [accountError, setAccountError] = useState('');
+  const [myTeams, setMyTeams] = useState<{ id: number; name: string; coach_name: string; joined_at: string }[]>([]);
+  const [joinCode, setJoinCode] = useState('');
+  const [joiningTeam, setJoiningTeam] = useState(false);
+  const [joinError, setJoinError] = useState('');
 
   const targetDivisions: string[] = JSON.parse(profile.target_divisions || '[]');
   const targetConferences: string[] = JSON.parse(profile.target_conferences || '[]');
@@ -87,6 +91,45 @@ export default function ProfilePage() {
       setLoading(false);
     });
   }, [router]);
+
+  useEffect(() => {
+    fetch('/api/athlete/teams', { cache: 'no-store', credentials: 'include' })
+      .then(r => r.ok ? r.json() : { teams: [] })
+      .then(data => setMyTeams(data.teams || []));
+  }, []);
+
+  const handleJoinTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!joinCode.trim()) return;
+    setJoiningTeam(true);
+    setJoinError('');
+    try {
+      const res = await fetch('/api/teams/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: joinCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setJoinError(data.error || 'Could not join team'); return; }
+      setJoinCode('');
+      const teamsRes = await fetch('/api/athlete/teams', { cache: 'no-store', credentials: 'include' });
+      const teamsData = await teamsRes.json();
+      setMyTeams(teamsData.teams || []);
+    } catch {
+      setJoinError('Something went wrong');
+    } finally {
+      setJoiningTeam(false);
+    }
+  };
+
+  const handleLeaveTeam = async (teamId: number) => {
+    await fetch('/api/teams/leave', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teamId }),
+    });
+    setMyTeams(t => t.filter(team => team.id !== teamId));
+  };
 
   const update = (key: string, val: unknown) => setProfile(p => ({ ...p, [key]: val }));
   const updateJSON = (key: string, val: string[]) => setProfile(p => ({ ...p, [key]: JSON.stringify(val) }));
@@ -238,6 +281,40 @@ export default function ProfilePage() {
                   </div>
                 );
               })()}
+            </div>
+
+            {/* Coach / Team access */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-[#18181b] mb-1">Coach / Team Access</h2>
+              <p className="text-sm text-gray-500 mb-4">
+                Join a team with a code from your coach to let them see your target school priorities. You can leave at any time.
+              </p>
+
+              <form onSubmit={handleJoinTeam} className="flex gap-2 mb-4">
+                <input type="text" placeholder="Enter join code" value={joinCode}
+                  onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#d9f99d]" />
+                <button type="submit" disabled={joiningTeam || !joinCode.trim()}
+                  className="bg-[#18181b] hover:bg-[#1a3060] text-white font-semibold text-sm px-4 py-2 rounded-lg transition disabled:opacity-50 whitespace-nowrap">
+                  {joiningTeam ? 'Joining...' : 'Join Team'}
+                </button>
+              </form>
+              {joinError && <p className="text-red-600 text-sm mb-4">{joinError}</p>}
+
+              {myTeams.length > 0 && (
+                <div className="space-y-2">
+                  {myTeams.map(team => (
+                    <div key={team.id} className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg px-4 py-2.5">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">{team.name}</p>
+                        <p className="text-xs text-gray-500">Coach {team.coach_name}</p>
+                      </div>
+                      <button type="button" onClick={() => handleLeaveTeam(team.id)}
+                        className="text-xs text-red-600 hover:underline">Leave</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Account settings */}

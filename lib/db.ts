@@ -77,6 +77,36 @@ export async function initDb() {
     )
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS coaches (
+      id SERIAL PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      name TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS teams (
+      id SERIAL PRIMARY KEY,
+      coach_id INTEGER NOT NULL REFERENCES coaches(id),
+      name TEXT NOT NULL,
+      join_code TEXT UNIQUE NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS team_members (
+      id SERIAL PRIMARY KEY,
+      team_id INTEGER NOT NULL REFERENCES teams(id),
+      athlete_id INTEGER NOT NULL REFERENCES athletes(id),
+      joined_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(team_id, athlete_id)
+    )
+  `;
+
   // Safe column migrations
   await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS address_street TEXT`;
   await sql`ALTER TABLE athletes ADD COLUMN IF NOT EXISTS address_city TEXT`;

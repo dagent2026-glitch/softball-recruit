@@ -123,6 +123,10 @@ export default function LandingPage() {
           <span className="font-bold text-white">RecruitRadar</span>
         </div>
         <p>College Softball Camp Intelligence Platform</p>
+        <p className="mt-2">
+          Travel coach or facilitator?{' '}
+          <Link href="/coach/signup" className="text-lime-700 font-semibold hover:underline">See your players&apos; priorities →</Link>
+        </p>
       </footer>
     </div>
   );
