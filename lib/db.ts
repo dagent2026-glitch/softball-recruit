@@ -110,6 +110,18 @@ export async function initDb() {
     )
   `;
 
+  // An athlete's personal camp schedule — populated by the optimal-schedule
+  // generator and/or added to manually, camp by camp.
+  await sql`
+    CREATE TABLE IF NOT EXISTS schedule_entries (
+      id SERIAL PRIMARY KEY,
+      athlete_id INTEGER NOT NULL REFERENCES athletes(id),
+      camp_id INTEGER NOT NULL REFERENCES camps(id),
+      added_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(athlete_id, camp_id)
+    )
+  `;
+
   // Assistant coaches on a team. The team's owner (teams.coach_id) is NOT
   // duplicated in here — this table only holds additional coaches.
   await sql`

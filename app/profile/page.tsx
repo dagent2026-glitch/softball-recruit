@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Nav from '@/components/Nav';
+import ScheduleTab from '@/components/ScheduleTab';
 import { D1_SCHOOLS, CONFERENCES } from '@/lib/schools';
 
 const POSITIONS = ['Pitcher','Catcher','1B','2B','3B','SS','Middle Infield','Corner Infield','OF','Utility'];
@@ -56,7 +57,7 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [schoolSearch, setSchoolSearch] = useState('');
-  const [tab, setTab] = useState<'basic' | 'position' | 'targets' | 'account'>('basic');
+  const [tab, setTab] = useState<'basic' | 'position' | 'targets' | 'schedule' | 'account'>('basic');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [accountError, setAccountError] = useState('');
@@ -213,14 +214,14 @@ export default function ProfilePage() {
 
         {/* Progress tabs */}
         <div className="flex gap-1 bg-gray-200 p-1 rounded-xl mb-6">
-          {(['basic','position','targets','account'] as const).map((t, i) => (
+          {(['basic','position','targets','schedule','account'] as const).map((t, i) => (
             <button key={t} onClick={() => setTab(t)}
               className={`flex-1 py-2 text-sm font-semibold rounded-lg transition flex items-center justify-center gap-1.5 ${
                 tab === t ? 'bg-white text-[#18181b] shadow' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               {tabComplete[t as keyof typeof tabComplete] && <span className="text-green-500 text-xs">✓</span>}
-              {i === 0 ? '👤 Basic Info' : i === 1 ? '⚾ Position' : i === 2 ? '🎯 Target Schools' : '⚙️ Account'}
+              {i === 0 ? '👤 Basic Info' : i === 1 ? '⚾ Position' : i === 2 ? '🎯 Target Schools' : i === 3 ? '📅 Schedule' : '⚙️ Account'}
             </button>
           ))}
         </div>
@@ -354,6 +355,8 @@ export default function ProfilePage() {
               </div>
             </form>
           </div>
+        ) : tab === 'schedule' ? (
+          <ScheduleTab targetSchools={targetSchools} />
         ) : (
           <form onSubmit={(e) => handleSave(e, tab === 'targets')}>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
