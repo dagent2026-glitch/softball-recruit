@@ -145,7 +145,7 @@ export default function CampsPage() {
               </button>
               <button onClick={() => setViewMode('matched')}
                 className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition ${viewMode === 'matched' ? 'bg-white text-[#18181b] shadow' : 'text-gray-500'}`}>
-                🎯 My Matches
+                🎯 Target Schools
               </button>
             </div>
           )}
@@ -195,7 +195,7 @@ export default function CampsPage() {
             <p className="text-gray-500">No camps match your filters.</p>
             {viewMode === 'matched' && (
               <p className="text-sm text-gray-400 mt-2">
-                <Link href="/profile" className="text-lime-700 hover:underline">Update your profile</Link> to get better matches.
+                <Link href="/profile" className="text-lime-700 hover:underline">Add target schools</Link> to your profile to see their camps here.
               </p>
             )}
           </div>
