@@ -1,21 +1,36 @@
 import { sql } from './db';
 import { dispatcher } from './dispatcher';
 
+// Resend's free-tier account this app uses is capped at 100 emails/day.
+// A single run matching many athletes against many new camps can easily
+// exceed that in one burst (a production catch-up run once sent 200+ in
+// under a minute). Capping how many emails one run will actually send
+// keeps any single run from blowing through the daily quota by itself.
+const MAX_EMAILS_PER_RUN = 80;
+
 // Shared by checkAlertsForCamp (one new camp, e.g. from the admin panel) and
 // checkAllAlerts (every camp, e.g. the scraper's post-sync catch-up run).
-// 'instant' matches (an athlete's exact target school) send immediately,
-// one email per camp, since each is meant to read as urgent. 'digest'
-// matches (broader division/region overlap) are collected per athlete
-// across every camp in this call and sent as a single combined email —
-// sending one email per camp here previously flooded athletes who matched
-// many camps in one run.
+// 'instant' matches (an athlete's exact target school) each send as their
+// own email, since each is meant to read as urgent. 'digest' matches
+// (broader division/region overlap) are collected per athlete across every
+// camp in this call and sent as a single combined email — sending one
+// email per camp here previously flooded athletes who matched many camps
+// in one run.
+//
+// Matching happens in a first pass with nothing sent or recorded yet, so
+// the total planned email count is known before anything goes out. Only
+// the first MAX_EMAILS_PER_RUN of those actually send + get an alerts row;
+// anything beyond the cap is left completely unrecorded, so it's picked up
+// automatically on the next run instead of being silently lost.
 async function checkAlertsForCamps(campIds: number[]): Promise<number> {
   if (campIds.length === 0) return 0;
   const camps = await sql`SELECT * FROM camps WHERE id = ANY(${campIds})`;
   if (camps.length === 0) return 0;
 
   const athletes = await sql`SELECT * FROM athletes`;
-  let alertCount = 0;
+
+  type InstantMatch = { athlete: any; camp: any };
+  const instantMatches: InstantMatch[] = [];
   const digestByAthlete = new Map<number, { athlete: any; camps: any[] }>();
 
   for (const camp of camps) {
@@ -42,12 +57,8 @@ async function checkAlertsForCamps(campIds: number[]): Promise<number> {
       const existing = await sql`SELECT id FROM alerts WHERE athlete_id = ${athlete.id} AND camp_id = ${camp.id}`;
       if (existing.length > 0) continue;
 
-      await sql`INSERT INTO alerts (athlete_id, camp_id, type) VALUES (${athlete.id}, ${camp.id}, ${alertType})`;
-      alertCount++;
-      console.log(`[ALERT] ${alertType.toUpperCase()} → ${athlete.email} | ${camp.school_name} — ${camp.camp_name}`);
-
       if (alertType === 'instant') {
-        await dispatcher.send(athlete, camp, 'instant').catch(e => console.error("Dispatcher failed:", e));
+        instantMatches.push({ athlete, camp });
       } else {
         if (!digestByAthlete.has(athlete.id)) digestByAthlete.set(athlete.id, { athlete, camps: [] });
         digestByAthlete.get(athlete.id)!.camps.push(camp);
@@ -55,7 +66,32 @@ async function checkAlertsForCamps(campIds: number[]): Promise<number> {
     }
   }
 
-  for (const { athlete, camps: matchedCamps } of digestByAthlete.values()) {
+  const digestGroups = [...digestByAthlete.values()];
+  const totalPlanned = instantMatches.length + digestGroups.length;
+  if (totalPlanned > MAX_EMAILS_PER_RUN) {
+    console.warn(`[ALERTS] ${totalPlanned} email(s) matched this run, capping at ${MAX_EMAILS_PER_RUN}; the rest will be picked up on the next run`);
+  }
+
+  let sent = 0;
+  let alertCount = 0;
+
+  for (const { athlete, camp } of instantMatches) {
+    if (sent >= MAX_EMAILS_PER_RUN) break;
+    await sql`INSERT INTO alerts (athlete_id, camp_id, type) VALUES (${athlete.id}, ${camp.id}, 'instant')`;
+    alertCount++;
+    sent++;
+    console.log(`[ALERT] INSTANT → ${athlete.email} | ${camp.school_name} — ${camp.camp_name}`);
+    await dispatcher.send(athlete, camp, 'instant').catch(e => console.error("Dispatcher failed:", e));
+  }
+
+  for (const { athlete, camps: matchedCamps } of digestGroups) {
+    if (sent >= MAX_EMAILS_PER_RUN) break;
+    for (const camp of matchedCamps) {
+      await sql`INSERT INTO alerts (athlete_id, camp_id, type) VALUES (${athlete.id}, ${camp.id}, 'digest')`;
+      alertCount++;
+    }
+    sent++;
+    console.log(`[ALERT] DIGEST → ${athlete.email} | ${matchedCamps.length} camp(s)`);
     await dispatcher.sendDigest(athlete, matchedCamps).catch(e => console.error("Digest dispatch failed:", e));
   }
 
