@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql, initDb } from '@/lib/db';
 import { checkAlertsForCamp } from '@/lib/alerts';
+import { getSessionIsAdmin } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
   await initDb();
@@ -33,8 +34,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const adminKey = req.headers.get('x-admin-key');
-  if (adminKey !== 'slugger2026') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await getSessionIsAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     await initDb();
     const b = await req.json();

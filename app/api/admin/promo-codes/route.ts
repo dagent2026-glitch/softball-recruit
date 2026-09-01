@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql, initDb } from '@/lib/db';
+import { getSessionIsAdmin } from '@/lib/auth';
 
-function checkAdmin(req: NextRequest) {
-  return req.headers.get('x-admin-key') === 'slugger2026';
-}
-
-export async function GET(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export async function GET() {
+  if (!(await getSessionIsAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   await initDb();
   const codes = await sql`SELECT * FROM promo_codes ORDER BY created_at DESC`;
   return NextResponse.json(codes);
 }
 
 export async function POST(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await getSessionIsAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   await initDb();
 
   const body = await req.json();
@@ -38,7 +35,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!checkAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await getSessionIsAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   await initDb();
 
   const { id, active } = await req.json();

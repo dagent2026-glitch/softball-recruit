@@ -21,19 +21,24 @@ export default function AdminPage() {
     position_focus:'All', registration_link:'', source:'Ryzer', notes:''
   });
 
-  const login = (e: React.FormEvent) => {
+  const login = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pw === 'slugger2026') setAuthed(true);
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+    if (res.ok) { setAuthed(true); setPw(''); }
     else alert('Wrong password');
   };
 
-  const loadPromoCodes = () => fetch('/api/admin/promo-codes', { headers: { 'x-admin-key': 'slugger2026' } })
+  const loadPromoCodes = () => fetch('/api/admin/promo-codes')
     .then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setPromoCodes(d); });
 
   useEffect(() => {
     if (!authed) return;
     fetch('/api/camps').then(r => r.json()).then(setCamps);
-    fetch('/api/alerts', { headers: { 'x-admin-key': 'slugger2026' } }).then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setAlertLog(d); });
+    fetch('/api/alerts').then(r => r.ok ? r.json() : []).then(d => { if (Array.isArray(d)) setAlertLog(d); });
     loadPromoCodes();
   }, [authed]);
 
@@ -41,7 +46,7 @@ export default function AdminPage() {
     e.preventDefault();
     const res = await fetch('/api/admin/promo-codes', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-key': 'slugger2026' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(promoForm),
     });
     const data = await res.json();
@@ -57,7 +62,7 @@ export default function AdminPage() {
   const togglePromoCode = async (id: number, active: boolean) => {
     await fetch('/api/admin/promo-codes', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'x-admin-key': 'slugger2026' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, active }),
     });
     loadPromoCodes();
@@ -67,7 +72,7 @@ export default function AdminPage() {
     e.preventDefault();
     const res = await fetch('/api/camps', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-key': 'slugger2026' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
     });
     const data = await res.json();
@@ -81,9 +86,7 @@ export default function AdminPage() {
   };
 
   const triggerAlerts = async () => {
-    const res = await fetch('/api/alerts', {
-      method: 'POST', headers: { 'x-admin-key': 'slugger2026' }
-    });
+    const res = await fetch('/api/alerts', { method: 'POST' });
     const data = await res.json();
     setMsg(`Alerts check complete: ${data.alerts_created} new alerts created`);
   };

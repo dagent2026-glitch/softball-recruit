@@ -1,10 +1,18 @@
 import { Resend } from 'resend';
 
+let resendClient: Resend | null = null;
+
 // Central notification router
 // Will route to Resend (Email) today, Twilio (SMS) soon, and Browser Push later.
 export const dispatcher = {
-  resend: new Resend(process.env.RESEND_API_KEY),
-  
+  // Lazily instantiated so importing this module never fails at build/start
+  // time in an environment without RESEND_API_KEY set (e.g. local dev) —
+  // it only throws if something actually tries to send an email.
+  get resend(): Resend {
+    if (!resendClient) resendClient = new Resend(process.env.RESEND_API_KEY);
+    return resendClient;
+  },
+
   async send(athlete: any, camp: any, alertType: 'instant' | 'digest') {
     console.log(`[DISPATCHER] Routing ${alertType.toUpperCase()} alert to ${athlete.email} for ${camp.school_name}`);
     

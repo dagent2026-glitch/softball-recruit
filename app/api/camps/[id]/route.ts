@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql, initDb } from '@/lib/db';
+import { getSessionIsAdmin } from '@/lib/auth';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const adminKey = req.headers.get('x-admin-key');
-  if (adminKey !== 'slugger2026') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await getSessionIsAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     await initDb();
