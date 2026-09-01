@@ -83,5 +83,70 @@ export const dispatcher = {
     } catch (e) {
       console.error('[RESEND EXCEPTION]', e);
     }
+  },
+
+  // One combined email per athlete for every "digest" (division/region)
+  // match found in a single alert-check run, instead of one email per camp —
+  // an athlete matching many camps in one run (e.g. a broad division match
+  // against a large catch-up batch) would otherwise get flooded.
+  async sendDigest(athlete: any, camps: any[]) {
+    if (camps.length === 0) return;
+    console.log(`[DISPATCHER] Routing DIGEST alert to ${athlete.email} for ${camps.length} camp(s)`);
+
+    const rows = camps.map(camp => {
+      const dateStr = new Date(camp.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return `
+        <div style="background: #fafafa; border: 1px solid #e4e4e7; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+          <h2 style="margin: 0 0 8px 0; font-size: 18px; color: #18181b;">${camp.school_name}</h2>
+          <p style="margin: 0 0 4px 0; color: #52525b; font-size: 14px;"><strong>Camp:</strong> ${camp.camp_name}</p>
+          <p style="margin: 0 0 4px 0; color: #52525b; font-size: 14px;"><strong>Date:</strong> ${dateStr}</p>
+          <p style="margin: 0 0 14px 0; color: #52525b; font-size: 14px;"><strong>Type:</strong> ${camp.camp_type}</p>
+          <a href="${camp.registration_link}" style="display: inline-block; background: #d9f99d; color: #18181b; text-decoration: none; font-weight: bold; padding: 10px 20px; border-radius: 8px; font-size: 14px;">
+            Register Now →
+          </a>
+        </div>
+      `;
+    }).join('');
+
+    const html = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #18181b;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #18181b; margin-bottom: 5px;">Recruit<span style="color: #84cc16;">Radar</span></h1>
+          <div style="height: 4px; width: 40px; background: #d9f99d; margin: 0 auto; border-radius: 2px;"></div>
+        </div>
+
+        <p style="font-size: 16px;">Hi ${athlete.name.split(' ')[0]},</p>
+
+        <p style="font-size: 16px;">
+          ${camps.length === 1 ? 'A new camp' : `${camps.length} new camps`} matching your region/division preferences ${camps.length === 1 ? 'was' : 'were'} just posted:
+        </p>
+
+        ${rows}
+
+        <p style="font-size: 14px; color: #71717a; text-align: center; margin-top: 40px;">
+          You are receiving this because you set up alerts on RecruitRadar.<br/>
+          To manage your alerts, <a href="https://softball-recruit.vercel.app/profile" style="color: #18181b;">update your profile</a>.
+        </p>
+      </div>
+    `;
+
+    try {
+      const { data, error } = await this.resend.emails.send({
+        from: 'RecruitRadar Alerts <alerts@recruitradar.co>',
+        to: athlete.email,
+        subject: camps.length === 1
+          ? `New Camp in your area: ${camps[0].school_name} ${camps[0].camp_name}`
+          : `${camps.length} new camps in your area`,
+        html: html,
+      });
+
+      if (error) {
+        console.error('[RESEND ERROR]', error);
+      } else {
+        console.log('[RESEND SUCCESS] Digest email queued:', data?.id);
+      }
+    } catch (e) {
+      console.error('[RESEND EXCEPTION]', e);
+    }
   }
 };
