@@ -35,8 +35,6 @@ export async function checkAlertsForCamp(campId: number): Promise<number> {
         console.log(`[ALERT] ${alertType.toUpperCase()} → ${athlete.email} | ${camp.school_name} — ${camp.camp_name}`);
         
         // Dispatch notifications via our central routing hub (Email active, SMS/Push ready)
-        // Note: For Resend sandbox, athlete.email MUST match your verified Resend email address
-        // until we hook up a verified domain.
         await dispatcher.send(athlete, camp, alertType as 'instant' | 'digest').catch(e => console.error("Dispatcher failed:", e));
         
         alertCount++;

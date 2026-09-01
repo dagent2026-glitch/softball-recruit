@@ -3,7 +3,7 @@ import { Resend } from 'resend';
 // Central notification router
 // Will route to Resend (Email) today, Twilio (SMS) soon, and Browser Push later.
 export const dispatcher = {
-  resend: new Resend(process.env.RESEND_API_KEY || 're_czKGzqUX_4o6DmJhaFLLfhyMdRTyojBQy'),
+  resend: new Resend(process.env.RESEND_API_KEY),
   
   async send(athlete: any, camp: any, alertType: 'instant' | 'digest') {
     console.log(`[DISPATCHER] Routing ${alertType.toUpperCase()} alert to ${athlete.email} for ${camp.school_name}`);
@@ -61,8 +61,8 @@ export const dispatcher = {
 
     try {
       const { data, error } = await this.resend.emails.send({
-        from: 'RecruitRadar Alerts <onboarding@resend.dev>', // Resend sandbox requires onboarding@resend.dev
-        to: athlete.email, // In sandbox mode, this MUST be the email address you registered Resend with
+        from: 'RecruitRadar Alerts <alerts@recruitradar.co>',
+        to: athlete.email,
         subject: subject,
         html: html,
       });
