@@ -27,6 +27,9 @@ export default function CoachNav({ coachName }: { coachName?: string }) {
       </Link>
 
       <div className="flex items-center gap-4">
+        <Link href="/coach/camps" className="text-sm text-white/60 hover:text-white transition">
+          Camps
+        </Link>
         {coachName && <span className="text-sm text-white/60">{coachName}</span>}
         <button onClick={logout} className="text-sm text-white/60 hover:text-white transition">
           Log out
