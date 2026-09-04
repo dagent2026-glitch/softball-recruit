@@ -13,20 +13,24 @@ export const dispatcher = {
     return resendClient;
   },
 
-  async send(athlete: any, camp: any, alertType: 'instant' | 'digest') {
+  // Returns whether the email actually sent — callers use this to decide
+  // whether the alert is safe to record (see lib/alerts.ts). Never throws.
+  async send(athlete: any, camp: any, alertType: 'instant' | 'digest'): Promise<boolean> {
     console.log(`[DISPATCHER] Routing ${alertType.toUpperCase()} alert to ${athlete.email} for ${camp.school_name}`);
-    
+
     // Channel 1: EMAIL (Active)
-    await this.sendEmail(athlete, camp, alertType);
+    const emailSent = await this.sendEmail(athlete, camp, alertType);
 
     // Channel 2: SMS (Coming Soon)
     // if (athlete.phone && athlete.wants_sms) { await this.sendSMS(athlete, camp); }
-    
+
     // Channel 3: PUSH (Coming Later)
     // if (athlete.push_token) { await this.sendPush(athlete, camp); }
+
+    return emailSent;
   },
 
-  async sendEmail(athlete: any, camp: any, alertType: 'instant' | 'digest') {
+  async sendEmail(athlete: any, camp: any, alertType: 'instant' | 'digest'): Promise<boolean> {
     const subject = alertType === 'instant' 
       ? `🚨 ${camp.school_name} just posted a new softball camp!`
       : `New Camp in your area: ${camp.school_name} ${camp.camp_name}`;
@@ -77,11 +81,13 @@ export const dispatcher = {
 
       if (error) {
         console.error('[RESEND ERROR]', error);
-      } else {
-        console.log('[RESEND SUCCESS] Email queued:', data?.id);
+        return false;
       }
+      console.log('[RESEND SUCCESS] Email queued:', data?.id);
+      return true;
     } catch (e) {
       console.error('[RESEND EXCEPTION]', e);
+      return false;
     }
   },
 
@@ -89,8 +95,8 @@ export const dispatcher = {
   // match found in a single alert-check run, instead of one email per camp —
   // an athlete matching many camps in one run (e.g. a broad division match
   // against a large catch-up batch) would otherwise get flooded.
-  async sendDigest(athlete: any, camps: any[]) {
-    if (camps.length === 0) return;
+  async sendDigest(athlete: any, camps: any[]): Promise<boolean> {
+    if (camps.length === 0) return false;
     console.log(`[DISPATCHER] Routing DIGEST alert to ${athlete.email} for ${camps.length} camp(s)`);
 
     const rows = camps.map(camp => {
@@ -142,11 +148,13 @@ export const dispatcher = {
 
       if (error) {
         console.error('[RESEND ERROR]', error);
-      } else {
-        console.log('[RESEND SUCCESS] Digest email queued:', data?.id);
+        return false;
       }
+      console.log('[RESEND SUCCESS] Digest email queued:', data?.id);
+      return true;
     } catch (e) {
       console.error('[RESEND EXCEPTION]', e);
+      return false;
     }
   }
 };

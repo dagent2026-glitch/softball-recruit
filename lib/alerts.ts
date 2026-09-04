@@ -75,24 +75,30 @@ async function checkAlertsForCamps(campIds: number[]): Promise<number> {
   let sent = 0;
   let alertCount = 0;
 
+  // An alert row is only written once the send is confirmed to have
+  // actually gone out — a failed send (e.g. hitting Resend's daily quota)
+  // is left unrecorded so it's retried on a later run instead of being
+  // silently and permanently marked as delivered.
   for (const { athlete, camp } of instantMatches) {
     if (sent >= MAX_EMAILS_PER_RUN) break;
+    sent++;
+    const delivered = await dispatcher.send(athlete, camp, 'instant').catch(e => { console.error("Dispatcher failed:", e); return false; });
+    if (!delivered) continue;
     await sql`INSERT INTO alerts (athlete_id, camp_id, type) VALUES (${athlete.id}, ${camp.id}, 'instant')`;
     alertCount++;
-    sent++;
     console.log(`[ALERT] INSTANT → ${athlete.email} | ${camp.school_name} — ${camp.camp_name}`);
-    await dispatcher.send(athlete, camp, 'instant').catch(e => console.error("Dispatcher failed:", e));
   }
 
   for (const { athlete, camps: matchedCamps } of digestGroups) {
     if (sent >= MAX_EMAILS_PER_RUN) break;
+    sent++;
+    const delivered = await dispatcher.sendDigest(athlete, matchedCamps).catch(e => { console.error("Digest dispatch failed:", e); return false; });
+    if (!delivered) continue;
     for (const camp of matchedCamps) {
       await sql`INSERT INTO alerts (athlete_id, camp_id, type) VALUES (${athlete.id}, ${camp.id}, 'digest')`;
       alertCount++;
     }
-    sent++;
     console.log(`[ALERT] DIGEST → ${athlete.email} | ${matchedCamps.length} camp(s)`);
-    await dispatcher.sendDigest(athlete, matchedCamps).catch(e => console.error("Digest dispatch failed:", e));
   }
 
   return alertCount;
