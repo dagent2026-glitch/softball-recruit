@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CoachNav from '@/components/CoachNav';
+import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 
 type Camp = {
   id: number; school_name: string; camp_name: string; division: string;
@@ -37,7 +38,7 @@ export default function CoachCampsPage() {
   const [camps, setCamps] = useState<Camp[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'all' | 'team'>('all');
-  const [filters, setFilters] = useState({ region: '', division: '', month: '', type: '' });
+  const [filters, setFilters] = useState<{ region: string; division: string; month: string; types: string[] }>({ region: '', division: '', month: '', types: [] });
 
   useEffect(() => {
     fetch('/api/coach/me', { cache: 'no-store', credentials: 'include' }).then(async r => {
@@ -63,7 +64,7 @@ export default function CoachCampsPage() {
     if (filters.region) params.set('region', filters.region);
     if (filters.division) params.set('division', filters.division);
     if (filters.month) params.set('month', filters.month);
-    if (filters.type) params.set('type', filters.type);
+    filters.types.forEach(t => params.append('type', t));
     const res = await fetch('/api/camps' + (params.toString() ? '?' + params.toString() : ''));
     if (res.ok) setCamps(await res.json());
     setLoading(false);
@@ -83,8 +84,8 @@ export default function CoachCampsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
-  const displayedCamps = viewMode === 'team' && filters.type
-    ? camps.filter(c => c.camp_type === filters.type)
+  const displayedCamps = viewMode === 'team' && filters.types.length > 0
+    ? camps.filter(c => filters.types.includes(c.camp_type))
     : camps;
 
   return (
@@ -126,13 +127,10 @@ export default function CoachCampsPage() {
 
         {viewMode === 'team' && teams.length > 0 && (
           <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex flex-wrap gap-3 items-center">
-            <select value={filters.type} onChange={e => setFilters(f => ({ ...f, type: e.target.value }))}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d] bg-white">
-              <option value="">All Camp Types</option>
-              {CAMP_TYPES.map(o => <option key={o} value={o}>{o}</option>)}
-            </select>
-            {filters.type && (
-              <button onClick={() => setFilters(f => ({ ...f, type: '' }))}
+            <MultiSelectDropdown label="Camp Type" options={CAMP_TYPES} selected={filters.types}
+              onChange={types => setFilters(f => ({ ...f, types }))} />
+            {filters.types.length > 0 && (
+              <button onClick={() => setFilters(f => ({ ...f, types: [] }))}
                 className="text-sm text-gray-500 hover:text-gray-700 underline px-2">Clear</button>
             )}
           </div>
@@ -144,18 +142,19 @@ export default function CoachCampsPage() {
               { key: 'region', label: 'Region', options: ['Southeast','Northeast','Midwest','West','Texas'] },
               { key: 'division', label: 'Division', options: ['Power 4','Mid Major','Multi'] },
               { key: 'month', label: 'Month', options: ['January','March','April','May','June','July','August'] },
-              { key: 'type', label: 'Camp Type', options: CAMP_TYPES },
             ].map(({ key, label, options }) => (
               <select key={key}
-                value={filters[key as keyof typeof filters]}
+                value={filters[key as 'region' | 'division' | 'month']}
                 onChange={e => setFilters(f => ({ ...f, [key]: e.target.value }))}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d] bg-white">
                 <option value="">All {label}s</option>
                 {options.map(o => <option key={o} value={o}>{o}</option>)}
               </select>
             ))}
-            {Object.values(filters).some(Boolean) && (
-              <button onClick={() => setFilters({ region: '', division: '', month: '', type: '' })}
+            <MultiSelectDropdown label="Camp Type" options={CAMP_TYPES} selected={filters.types}
+              onChange={types => setFilters(f => ({ ...f, types }))} />
+            {(filters.region || filters.division || filters.month || filters.types.length > 0) && (
+              <button onClick={() => setFilters({ region: '', division: '', month: '', types: [] })}
                 className="text-sm text-gray-500 hover:text-gray-700 underline px-2">Clear</button>
             )}
           </div>

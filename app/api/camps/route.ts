@@ -9,26 +9,20 @@ export async function GET(req: NextRequest) {
   const region = searchParams.get('region');
   const division = searchParams.get('division');
   const month = searchParams.get('month');
-  const type = searchParams.get('type');
+  // Camp type supports multiple selections (?type=Prospect&type=Elite),
+  // so it's read with getAll rather than get.
+  const types = searchParams.getAll('type');
 
-  let camps;
-  if (region && division && month && type) {
-    camps = await sql`SELECT * FROM camps WHERE region=${region} AND division=${division} AND month=${month} AND camp_type=${type} ORDER BY start_date ASC`;
-  } else if (region && division && month) {
-    camps = await sql`SELECT * FROM camps WHERE region=${region} AND division=${division} AND month=${month} ORDER BY start_date ASC`;
-  } else if (region && division) {
-    camps = await sql`SELECT * FROM camps WHERE region=${region} AND division=${division} ORDER BY start_date ASC`;
-  } else if (region) {
-    camps = await sql`SELECT * FROM camps WHERE region=${region} ORDER BY start_date ASC`;
-  } else if (division) {
-    camps = await sql`SELECT * FROM camps WHERE division=${division} ORDER BY start_date ASC`;
-  } else if (month) {
-    camps = await sql`SELECT * FROM camps WHERE month=${month} ORDER BY start_date ASC`;
-  } else if (type) {
-    camps = await sql`SELECT * FROM camps WHERE camp_type=${type} ORDER BY start_date ASC`;
-  } else {
-    camps = await sql`SELECT * FROM camps ORDER BY start_date ASC`;
-  }
+  // The old version of this route branched into one hardcoded query per
+  // filter combination it happened to anticipate, silently ignoring any
+  // combination it didn't (e.g. division+month with no region). Filtering
+  // in memory instead avoids that entirely -- the camps table is small
+  // (barely 100 rows), so fetching it all and filtering here costs nothing.
+  let camps = await sql`SELECT * FROM camps ORDER BY start_date ASC`;
+  if (region) camps = camps.filter((c) => c.region === region);
+  if (division) camps = camps.filter((c) => c.division === division);
+  if (month) camps = camps.filter((c) => c.month === month);
+  if (types.length > 0) camps = camps.filter((c) => types.includes(c.camp_type));
 
   return NextResponse.json(camps);
 }
