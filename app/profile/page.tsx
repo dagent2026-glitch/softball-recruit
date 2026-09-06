@@ -76,14 +76,18 @@ export default function ProfilePage() {
   const targetRegions: string[] = JSON.parse(profile.target_regions || '[]');
   const targetSchools: string[] = JSON.parse(profile.target_schools || '[]');
 
-  const moveTargetSchool = (from: number, offset: number) => {
-    const to = from + offset;
-    if (to < 0 || to >= targetSchools.length) return;
+  const reorderTargetSchool = (from: number, to: number) => {
+    if (to < 0 || to >= targetSchools.length || from === to) return;
     const arr = [...targetSchools];
     const [item] = arr.splice(from, 1);
     arr.splice(to, 0, item);
     updateJSON('target_schools', arr);
   };
+
+  const moveTargetSchool = (from: number, offset: number) => reorderTargetSchool(from, from + offset);
+
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetch('/api/auth/me', { cache: 'no-store', credentials: 'include' }).then(r => {
@@ -571,9 +575,24 @@ export default function ProfilePage() {
 
                   {targetSchools.length > 0 && (
                     <div className="flex flex-col gap-1.5 mb-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                      <p className="text-xs text-gray-500 mb-0.5">Ranked by priority — use the arrows to reorder</p>
+                      <p className="text-xs text-gray-500 mb-0.5">Ranked by priority — drag to reorder, or use the arrows</p>
                       {targetSchools.map((s, i) => (
-                        <div key={s} className="bg-[#18181b] text-white text-xs px-2 py-1.5 rounded-full flex items-center gap-2">
+                        <div key={s}
+                          draggable
+                          onDragStart={() => setDragIndex(i)}
+                          onDragOver={e => { e.preventDefault(); if (dragOverIndex !== i) setDragOverIndex(i); }}
+                          onDrop={e => {
+                            e.preventDefault();
+                            if (dragIndex !== null) reorderTargetSchool(dragIndex, i);
+                            setDragIndex(null);
+                            setDragOverIndex(null);
+                          }}
+                          onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}
+                          className={`bg-[#18181b] text-white text-xs px-2 py-1.5 rounded-full flex items-center gap-2 cursor-grab active:cursor-grabbing transition ${
+                            dragIndex === i ? 'opacity-40' : ''
+                          } ${dragOverIndex === i && dragIndex !== null && dragIndex !== i ? 'ring-2 ring-[#d9f99d]' : ''}`}
+                        >
+                          <span className="text-white/40 select-none shrink-0" aria-hidden="true">⠿</span>
                           <span className="text-[#d9f99d] font-bold w-4 text-center shrink-0">{i + 1}</span>
                           <span className="flex-1">{s}</span>
                           <button type="button" onClick={() => moveTargetSchool(i, -1)} disabled={i === 0}

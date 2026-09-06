@@ -27,6 +27,8 @@ const TYPE_COLORS: Record<string, string> = {
   'Showcase': 'bg-pink-100 text-pink-800',
 };
 
+const CAMP_TYPES = ['Prospect', 'Elite', 'Youth', 'Pitching', 'Showcase'];
+
 export default function CoachCampsPage() {
   const router = useRouter();
   const [coachName, setCoachName] = useState('');
@@ -71,7 +73,19 @@ export default function CoachCampsPage() {
     if (teams.length === 0 && viewMode === 'team') return;
     loadCamps();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, viewMode, selectedTeamId, teams]);
+  }, [viewMode, selectedTeamId, teams]);
+
+  // 'all' mode re-fetches from the API on filter change (see loadCamps);
+  // 'team' mode already has every roster-matched camp loaded, so the type
+  // filter there is just a client-side narrow of what's on screen.
+  useEffect(() => {
+    if (viewMode === 'all') loadCamps();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
+
+  const displayedCamps = viewMode === 'team' && filters.type
+    ? camps.filter(c => c.camp_type === filters.type)
+    : camps;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -81,7 +95,7 @@ export default function CoachCampsPage() {
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold text-[#18181b]">Softball Camps 2026</h1>
-            <p className="text-gray-500 text-sm mt-1">{camps.length} camps</p>
+            <p className="text-gray-500 text-sm mt-1">{displayedCamps.length} camps</p>
           </div>
           <div className="flex gap-2 bg-gray-200 p-1 rounded-xl">
             <button onClick={() => setViewMode('all')}
@@ -110,13 +124,27 @@ export default function CoachCampsPage() {
           </div>
         )}
 
+        {viewMode === 'team' && teams.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex flex-wrap gap-3 items-center">
+            <select value={filters.type} onChange={e => setFilters(f => ({ ...f, type: e.target.value }))}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#d9f99d] bg-white">
+              <option value="">All Camp Types</option>
+              {CAMP_TYPES.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+            {filters.type && (
+              <button onClick={() => setFilters(f => ({ ...f, type: '' }))}
+                className="text-sm text-gray-500 hover:text-gray-700 underline px-2">Clear</button>
+            )}
+          </div>
+        )}
+
         {viewMode === 'all' && (
           <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex flex-wrap gap-3">
             {[
               { key: 'region', label: 'Region', options: ['Southeast','Northeast','Midwest','West','Texas'] },
               { key: 'division', label: 'Division', options: ['Power 4','Mid Major','Multi'] },
               { key: 'month', label: 'Month', options: ['January','March','April','May','June','July','August'] },
-              { key: 'type', label: 'Camp Type', options: ['Prospect','Elite','Youth','Pitching','Showcase'] },
+              { key: 'type', label: 'Camp Type', options: CAMP_TYPES },
             ].map(({ key, label, options }) => (
               <select key={key}
                 value={filters[key as keyof typeof filters]}
@@ -135,18 +163,20 @@ export default function CoachCampsPage() {
 
         {loading ? (
           <div className="text-center py-20 text-gray-500">Loading camps...</div>
-        ) : camps.length === 0 ? (
+        ) : displayedCamps.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-4xl mb-4">🔍</div>
             <p className="text-gray-500">
               {viewMode === 'team' && teams.length > 0
-                ? "No camps match your roster's target schools yet."
+                ? camps.length > 0
+                  ? 'No camps match that camp type.'
+                  : "No camps match your roster's target schools yet."
                 : 'No camps match your filters.'}
             </p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {camps.map((camp) => (
+            {displayedCamps.map((camp) => (
               <div key={camp.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition hover:border-[#d9f99d]/40">
                 <div className="flex items-start justify-between mb-3">
                   <div>
