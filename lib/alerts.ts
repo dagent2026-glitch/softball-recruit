@@ -48,9 +48,18 @@ async function checkAlertsForCamps(campIds: number[]): Promise<number> {
         alertType = 'instant';
       }
       if (!matched) {
-        const divMatch = targetDivisions.length === 0 || targetDivisions.includes(camp.division);
-        const regMatch = targetRegions.length === 0 || targetRegions.includes(camp.region);
-        if (divMatch && regMatch) { matched = true; alertType = 'digest'; }
+        // An unset filter must be excluded from the check, not auto-satisfied --
+        // `length === 0 ? true : ...` previously meant an athlete who never set
+        // target divisions/regions matched EVERY camp in the database (both
+        // conditions trivially true), turning "digest" into a firehose of every
+        // camp nationwide instead of the intended narrower overlap. Matching now
+        // requires at least one filter to actually be set, and only checks the
+        // filters that are.
+        const divActive = targetDivisions.length > 0;
+        const regActive = targetRegions.length > 0;
+        const divMatch = !divActive || targetDivisions.includes(camp.division);
+        const regMatch = !regActive || targetRegions.includes(camp.region);
+        if ((divActive || regActive) && divMatch && regMatch) { matched = true; alertType = 'digest'; }
       }
 
       if (!matched) continue;
