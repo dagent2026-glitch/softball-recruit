@@ -1,5 +1,6 @@
 import { sql } from './db';
 import { dispatcher } from './dispatcher';
+import { schoolNamesMatch } from './schools';
 
 // Resend's free-tier account this app uses is capped at 100 emails/day.
 // A single run matching many athletes against many new camps can easily
@@ -42,7 +43,7 @@ async function checkAlertsForCamps(campIds: number[]): Promise<number> {
       let matched = false;
       let alertType: 'instant' | 'digest' = 'digest';
 
-      if (targetSchools.length > 0 && targetSchools.some((s: string) => s.toLowerCase() === camp.school_name.toLowerCase())) {
+      if (targetSchools.length > 0 && targetSchools.some((s: string) => schoolNamesMatch(s, camp.school_name))) {
         matched = true;
         alertType = 'instant';
       }

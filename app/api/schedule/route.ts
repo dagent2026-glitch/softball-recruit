@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSessionAthleteId } from '@/lib/auth';
 import { sql, initDb } from '@/lib/db';
 import { campsOverlap } from '@/lib/scheduler';
+import { normalizeSchoolName } from '@/lib/schools';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,7 @@ export async function GET() {
 
     const athleteRows = await sql`SELECT target_schools FROM athletes WHERE id = ${athleteId}`;
     const targetSchools: string[] = JSON.parse(athleteRows[0]?.target_schools || '[]');
-    const priorityIndex = new Map(targetSchools.map((s, i) => [s.toLowerCase(), i]));
+    const priorityIndex = new Map(targetSchools.map((s, i) => [normalizeSchoolName(s), i]));
 
     const rows = await sql`
       SELECT c.*
@@ -25,7 +26,7 @@ export async function GET() {
 
     const entries = rows.map(c => ({
       ...c,
-      priority_rank: priorityIndex.has(c.school_name.toLowerCase()) ? priorityIndex.get(c.school_name.toLowerCase())! + 1 : null,
+      priority_rank: priorityIndex.has(normalizeSchoolName(c.school_name)) ? priorityIndex.get(normalizeSchoolName(c.school_name))! + 1 : null,
     }));
 
     // Flag any entries whose dates overlap another entry (can happen after manual adds)

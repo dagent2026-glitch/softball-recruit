@@ -1,3 +1,5 @@
+import { normalizeSchoolName } from './schools';
+
 export type SchedulableCamp = {
   id: number;
   school_name: string;
@@ -18,7 +20,7 @@ export type SchedulableCamp = {
  */
 export function generateOptimalSchedule(camps: SchedulableCamp[], targetSchools: string[]): number[] {
   const priorityIndex = new Map<string, number>();
-  targetSchools.forEach((school, i) => priorityIndex.set(school.toLowerCase(), i));
+  targetSchools.forEach((school, i) => priorityIndex.set(normalizeSchoolName(school), i));
 
   type Job = { id: number; start: number; end: number; weight: number };
   const jobs: Job[] = [];
@@ -31,7 +33,7 @@ export function generateOptimalSchedule(camps: SchedulableCamp[], targetSchools:
     // normalize rather than trust field order.
     const start = Math.min(a, b);
     const end = Math.max(a, b);
-    const rank = priorityIndex.get(camp.school_name.toLowerCase());
+    const rank = priorityIndex.get(normalizeSchoolName(camp.school_name));
     if (rank === undefined) continue; // not a target school — excluded
     jobs.push({ id: camp.id, start, end, weight: targetSchools.length - rank });
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionCoachId } from '@/lib/auth';
 import { sql, initDb } from '@/lib/db';
+import { normalizeSchoolName } from '@/lib/schools';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     for (const athlete of roster) {
       const targetSchools: string[] = JSON.parse(athlete.target_schools || '[]');
       for (const school of targetSchools) {
-        const key = school.toLowerCase();
+        const key = normalizeSchoolName(school);
         if (!targetingPlayers.has(key)) targetingPlayers.set(key, []);
         targetingPlayers.get(key)!.push(athlete.name);
       }
@@ -49,10 +50,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const allCamps = await sql`SELECT * FROM camps ORDER BY start_date ASC`;
     const matched = allCamps
-      .filter((camp: any) => targetingPlayers.has(camp.school_name.toLowerCase()))
+      .filter((camp: any) => targetingPlayers.has(normalizeSchoolName(camp.school_name)))
       .map((camp: any) => ({
         ...camp,
-        matched_players: targetingPlayers.get(camp.school_name.toLowerCase()),
+        matched_players: targetingPlayers.get(normalizeSchoolName(camp.school_name)),
       }));
 
     return NextResponse.json(matched);

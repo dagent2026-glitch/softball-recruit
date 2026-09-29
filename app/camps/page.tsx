@@ -172,7 +172,7 @@ export default function CampsPage() {
             {[
               { key: 'region', label: 'Region', options: ['Southeast','Northeast','Midwest','West','Texas'] },
               { key: 'division', label: 'Division', options: ['Power 4','Mid Major','Multi'] },
-              { key: 'month', label: 'Month', options: ['January','March','April','May','June','July','August'] },
+              { key: 'month', label: 'Month', options: ['January','February','March','April','May','June','July','August','September','October','November','December'] },
             ].map(({ key, label, options }) => (
               <select key={key}
                 value={filters[key as 'region' | 'division' | 'month']}

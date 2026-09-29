@@ -610,7 +610,7 @@ export default function ProfilePage() {
                   )}
 
                   <div className="border border-gray-200 rounded-lg max-h-52 overflow-y-auto">
-                    {filteredSchools.slice(0, 150).map(school => (
+                    {filteredSchools.map(school => (
                       <label key={school}
                         className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
                         <input type="checkbox"

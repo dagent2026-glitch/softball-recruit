@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionAthleteId } from '@/lib/auth';
 import { sql, initDb } from '@/lib/db';
+import { schoolNamesMatch } from '@/lib/schools';
 
 export async function GET() {
   const athleteId = await getSessionAthleteId();
@@ -17,7 +18,7 @@ export async function GET() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const matched = allCamps.filter((camp: any) =>
-    targetSchools.some(s => s.toLowerCase() === camp.school_name.toLowerCase())
+    targetSchools.some(s => schoolNamesMatch(s, camp.school_name))
   );
 
   return NextResponse.json(matched);
