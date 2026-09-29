@@ -19,6 +19,23 @@ export async function GET(req: NextRequest) {
   // in memory instead avoids that entirely -- the camps table is small
   // (barely 100 rows), so fetching it all and filtering here costs nothing.
   let camps = await sql`SELECT * FROM camps ORDER BY start_date ASC`;
+
+  // Sorting oldest-first with no date floor meant already-happened camps
+  // (irrelevant to anyone browsing for something to register for) sat at
+  // the top of the unfiltered list, burying genuinely upcoming ones below
+  // the fold -- exactly what looked like "still showing old camps."
+  // Exclude anything whose last relevant date is before today; keep rows
+  // with no date at all (a few scraped entries have a null start_date)
+  // rather than silently dropping them.
+  const showPast = searchParams.get('includePast') === 'true';
+  if (!showPast) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    camps = camps.filter((c) => {
+      const relevant = c.end_date || c.start_date;
+      return !relevant || relevant >= todayStr;
+    });
+  }
+
   if (region) camps = camps.filter((c) => c.region === region);
   if (division) camps = camps.filter((c) => c.division === division);
   if (month) camps = camps.filter((c) => c.month === month);
